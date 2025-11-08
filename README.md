@@ -1,116 +1,181 @@
+# Slotify - Intelligent Scheduling Platform
 
-# Calendly-Clone Scheduler App
+> AI-powered contextual scheduling platform with seamless calendar integration
 
-A full-featured advisor-client scheduling tool, built.
+Slotify is a modern scheduling application that helps advisors and clients manage appointments efficiently. Built with React, Node.js, and Firebase, it features intelligent availability detection, multi-calendar support, and AI-powered contextual augmentation.
 
+## 🏗️ Monorepo Structure
 
-## 📦 Repo
+This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turbo.build/repo).
 
-[👉 GitHub Repository] (https://github.com/uma26madasu/procalender_frontend)
-LiveLink:https://procalender-frontend-uma26madasus-projects.vercel.app/login
+```
+slotify/
+├── apps/
+│   ├── web/              # React frontend (Vite + TailwindCSS)
+│   └── api/              # Express.js backend API
+├── packages/
+│   ├── shared/           # Shared utilities and types
+│   └── eslint-config/    # Shared ESLint configuration
+└── package.json          # Root workspace configuration
+```
 
+## 🚀 Quick Start
 
-## 🔐 Login
+### Prerequisites
 
-- Use Google OAuth to sign in and connect calendars.
-- Connect multiple Google accounts to view merged availability.
-- Connect HubSpot CRM via OAuth (free test account supported).
+- Node.js >= 18.0.0
+- pnpm >= 8.0.0
 
----
-
-## 🗓 Features Overview
-
-### Advisor Capabilities
-- Create **scheduling windows** (e.g., Mon 9am–12pm)
-- Create **scheduling links** with:
-  - Custom usage limits
-  - Expiration date
-  - Custom questions
-  - Meeting duration
-  - Max # days in advance
-
-### Client Scheduling Flow
-- Visits a unique link (unauthenticated)
-- Picks a time slot
-- Enters:
-  - Email
-  - LinkedIn URL
-  - Custom question answers
-
----
-
-## 🧠 AI Contextual Augmentation
-
-- After a booking:
-  - Advisor receives an email with:
-    - Raw answers
-    - Augmented insights using:
-      - HubSpot contact notes (if available)
-      - OR scraped LinkedIn profile summary
-- Example:
-
-  ```
-  Q: What concerns do you have?
-  A: My daughter's wedding is going to be expensive
-
-  Context: Last time they were concerned about her college tuition.
-  ```
-
----
-
-## 📧 Email Notification
-
-- Advisors are notified via email when a new booking is made.
-- Email includes:
-  - Full form answers
-  - Context-augmented notes
-
----
-
-## 🛠 Tech Stack
-
-- **Frontend**: React, TailwindCSS
-- **Backend**: Node.js, Express
-- **Auth & Calendar**: Google OAuth, Calendar API
-- **CRM**: HubSpot OAuth + Contacts API
-- **AI**: Optional endpoint or local summarizer (mocked in demo)
-- **Email**: Nodemailer via Gmail
-- **Scraping**: Puppeteer (or placeholder/mock)
-
----
-
-## 🚀 Setup Locally (optional)
+### Installation
 
 ```bash
-git clone https://github.com/your-username/calendly-clone-scheduler.git
-cd calendly-clone-scheduler
-npm install
-npm run dev
+# Install pnpm if you haven't already
+npm install -g pnpm
+
+# Install all dependencies
+pnpm install
+
+# Run both frontend and backend in development mode
+pnpm dev
+
+# Or run them separately:
+pnpm web:dev    # Frontend only
+pnpm api:dev    # Backend only
 ```
 
-Setup your `.env` with:
+### Build
 
+```bash
+# Build all apps
+pnpm build
+
+# Build specific app
+pnpm web:build
+pnpm api:build
 ```
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-HUBSPOT_CLIENT_ID=
-HUBSPOT_CLIENT_SECRET=
-EMAIL_USER=
-EMAIL_PASS=
+
+## 📦 Apps & Packages
+
+### Frontend (`apps/web`)
+
+- **Framework**: React 18 + Vite
+- **Styling**: TailwindCSS
+- **State**: React Context API
+- **Auth**: Firebase Authentication
+- **Database**: Firebase Firestore
+- **Calendar**: React Big Calendar + Google Calendar API
+- **Forms**: React Hook Form + Zod
+
+**Key Features**:
+- Create scheduling windows and shareable links
+- Google Calendar integration with conflict detection
+- Custom booking questions and approval workflows
+- Analytics dashboard
+- Public scheduler for clients
+
+### Backend (`apps/api`)
+
+- **Framework**: Express.js
+- **Database**: MongoDB (Mongoose)
+- **Auth**: JWT + OAuth 2.0
+- **Integrations**: Google Calendar, HubSpot, LinkedIn scraping
+- **Email**: Nodemailer
+
+**Key Features**:
+- RESTful API endpoints
+- OAuth integrations (Google, GitHub, LinkedIn)
+- Email notifications
+- AI contextual augmentation
+- Meeting management and approvals
+
+### Shared Packages
+
+- **`shared`**: Common utilities, types, and constants
+- **eslint-config`**: Shared ESLint configuration (WIP)
+
+## 🔧 Development
+
+### Available Scripts
+
+From the root directory:
+
+```bash
+pnpm dev          # Run all apps in development mode
+pnpm build        # Build all apps
+pnpm lint         # Lint all apps
+pnpm clean        # Clean all node_modules and build artifacts
+
+pnpm web:dev      # Run frontend only
+pnpm api:dev      # Run backend only
+pnpm web:build    # Build frontend only
+pnpm api:build    # Build backend only
 ```
 
----
+### Environment Variables
 
-## 📌 Notes
+Each app has its own `.env` file:
 
-- AI augmentation and LinkedIn scraping can be mocked if full implementation is restricted due to scraping TOS.
-- OAuth flows are fully working with test accounts.
+**Frontend (`apps/web/.env`)**:
+```env
+VITE_API_URL=http://localhost:5000
+VITE_FIREBASE_API_KEY=your_key
+VITE_FIREBASE_AUTH_DOMAIN=your_domain
+# ... other Firebase config
+```
 
----
+**Backend (`apps/api/.env`)**:
+```env
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_secret
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_secret
+# ... other API keys
+```
 
-## 📅 Submission Info
+## 🌐 Deployment
 
-- Submitted: **May 12, 2025 before 10am MDT**
-- Completed by: Uma Madasu
-- Contact: umamadasu@gmail.com
-# procalender_frontend
+### Frontend (Vercel)
+
+The frontend is configured for Vercel deployment:
+
+```bash
+cd apps/web
+vercel deploy
+```
+
+### Backend (Render/Railway/Fly.io)
+
+The backend can be deployed to any Node.js hosting platform:
+
+```bash
+cd apps/api
+# Follow platform-specific deployment instructions
+```
+
+## 🧪 Testing
+
+Testing infrastructure is currently being set up. Stay tuned!
+
+## 📝 Contributing
+
+This is a private project. For questions or contributions, please contact the project maintainer.
+
+## 🔗 Integration with Chainsync
+
+Slotify is designed to work as a scheduling agent within the Chainsync ecosystem. The modular monorepo structure allows for:
+
+- Standalone web application deployment
+- Integration as a Chainsync agent
+- Shared core logic between both use cases
+
+## 📄 License
+
+Private project - All rights reserved
+
+## 🙏 Acknowledgments
+
+Built with modern tools and frameworks:
+- React, Vite, TailwindCSS
+- Express.js, MongoDB
+- Firebase
+- Turborepo, pnpm
