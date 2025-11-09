@@ -5,7 +5,7 @@
 Your MongoDB Atlas connection string has been set up in `apps/api/.env`:
 
 ```
-mongodb+srv://umamadasu:<db_password>@cluster0.h4opqie.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
+mongodb+srv://umamadasu:<db_password>@cluster0.wxajvjb.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
 ```
 
 ## 🔧 Next Steps
@@ -26,7 +26,7 @@ Open `apps/api/.env` and replace `<db_password>` with your actual MongoDB passwo
 ```bash
 # If password is: MyP@ss#123
 # Encode it as: MyP%40ss%23123
-MONGODB_URI=mongodb+srv://umamadasu:MyP%40ss%23123@cluster0.h4opqie.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=mongodb+srv://umamadasu:MyP%40ss%23123@cluster0.wxajvjb.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
 ```
 
 ### 2. Generate JWT Secret
@@ -60,7 +60,7 @@ When deploying to Railway, add these environment variables:
 
 ```bash
 # MongoDB Connection
-MONGODB_URI=mongodb+srv://umamadasu:YOUR_ACTUAL_PASSWORD@cluster0.h4opqie.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=mongodb+srv://umamadasu:YOUR_ACTUAL_PASSWORD@cluster0.wxajvjb.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
 
 # JWT Secret (use the one you generated)
 JWT_SECRET=your_generated_jwt_secret_here
@@ -174,6 +174,6 @@ FRONTEND_URL=https://your-frontend.up.railway.app
 ---
 
 **Created:** 2025-11-09
-**MongoDB Cluster:** cluster0.h4opqie.mongodb.net
+**MongoDB Cluster:** cluster0.wxajvjb.mongodb.net
 **Database:** slotify
 **Username:** umamadasu
