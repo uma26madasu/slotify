@@ -1,0 +1,18 @@
+# Nixpacks configuration for Railway
+# Explicitly tells Railway how to build the monorepo
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "pnpm"]
+
+[phases.install]
+cmds = [
+    "pnpm install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+    "pnpm --filter api build"
+]
+
+[start]
+cmd = "cd apps/api && node server.js"
