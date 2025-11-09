@@ -9,7 +9,7 @@ Your MongoDB Atlas configuration is **100% complete and correct**. The local con
 ## ✅ What's Been Configured
 
 ### 1. MongoDB Atlas
-- ✅ Cluster: `cluster0.h4opqie.mongodb.net` - **RUNNING**
+- ✅ Cluster: `cluster0.wxajvjb.mongodb.net` - **RUNNING**
 - ✅ Database: `slotify`
 - ✅ User: `umamadasu`
 - ✅ Password: `Impala@007` (URL-encoded as `Impala%40007`)
@@ -17,7 +17,7 @@ Your MongoDB Atlas configuration is **100% complete and correct**. The local con
 
 ### 2. Local Environment (`apps/api/.env`)
 ```bash
-MONGODB_URI=mongodb+srv://umamadasu:Impala%40007@cluster0.h4opqie.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=mongodb+srv://umamadasu:Impala%40007@cluster0.wxajvjb.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
 JWT_SECRET=39111a93f1cb196ca4de31b0a4afebbb0af52d837236509c8ada2e3f4e6331fc
 WEBHOOK_SECRET=9d38bb68b50be5d561c74a98f8f60d6e6b4f3063f2690cea75a5ae4f3b59de17
 ```
@@ -60,7 +60,7 @@ Your configuration is ready for production deployment. Here's how to deploy:
 
 ```bash
 NODE_ENV=production
-MONGODB_URI=mongodb+srv://umamadasu:Impala%40007@cluster0.h4opqie.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=mongodb+srv://umamadasu:Impala%40007@cluster0.wxajvjb.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
 JWT_SECRET=39111a93f1cb196ca4de31b0a4afebbb0af52d837236509c8ada2e3f4e6331fc
 WEBHOOK_SECRET=9d38bb68b50be5d561c74a98f8f60d6e6b4f3063f2690cea75a5ae4f3b59de17
 MAX_BOOKING_DAYS_AHEAD=365
@@ -83,7 +83,7 @@ railway login
 railway link
 
 # Set variables
-railway variables set MONGODB_URI="mongodb+srv://umamadasu:Impala%40007@cluster0.h4opqie.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0"
+railway variables set MONGODB_URI="mongodb+srv://umamadasu:Impala%40007@cluster0.wxajvjb.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0"
 railway variables set JWT_SECRET="39111a93f1cb196ca4de31b0a4afebbb0af52d837236509c8ada2e3f4e6331fc"
 railway variables set WEBHOOK_SECRET="9d38bb68b50be5d561c74a98f8f60d6e6b4f3063f2690cea75a5ae4f3b59de17"
 railway variables set NODE_ENV="production"
@@ -168,7 +168,7 @@ Expected response for `/api/mongodb-test`:
 
 | Item | Status | Notes |
 |------|--------|-------|
-| MongoDB Cluster | ✅ Running | cluster0.h4opqie.mongodb.net |
+| MongoDB Cluster | ✅ Running | cluster0.wxajvjb.mongodb.net |
 | Database User | ✅ Created | umamadasu with password |
 | Network Access | ✅ Configured | 0.0.0.0/0 whitelisted |
 | Connection String | ✅ Correct | URL-encoded password |
