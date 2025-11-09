@@ -1,7 +1,7 @@
 
     window.__ENV__ = {
-      // API URL
-      VITE_API_URL: 'https://procalender-backend.onrender.com',
+      // API URL - Update this with your Railway deployment URL
+      VITE_API_URL: 'https://slotify-backend.up.railway.app',
       
       // Firebase configuration
       VITE_FIREBASE_API_KEY: 'AIzaSyCYsr6oZ3j-R7nJe6xWaRO6Q5xi0Rk3IV8',
