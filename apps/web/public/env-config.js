@@ -1,7 +1,7 @@
 
     window.__ENV__ = {
       // API URL
-      VITE_API_URL: 'https://slotify-backend.onrender.com',
+      VITE_API_URL: 'https://procalender-backend.onrender.com',
       
       // Firebase configuration
       VITE_FIREBASE_API_KEY: 'AIzaSyCYsr6oZ3j-R7nJe6xWaRO6Q5xi0Rk3IV8',
@@ -18,6 +18,6 @@
       
       // Version info (useful for debugging)
       VITE_APP_VERSION: '1.0.0',
-      VITE_APP_BUILD_DATE: '2025-05-28T16:22:21.550Z'
+      VITE_APP_BUILD_DATE: '2025-11-08T22:43:55.985Z'
     };
   
