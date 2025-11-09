@@ -17,17 +17,35 @@ app.set('trust proxy', 1);
 
 // Enhanced CORS configuration
 console.log('🔧 Configuring CORS...');
+
+// Build allowed origins list
+const allowedOrigins = [
+  // Vercel deployments
+  'https://procalender-frontend.vercel.app',
+  'https://procalender-frontend-uma26madasus-projects.vercel.app',
+  // Local development
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'https://localhost:3000',
+  'https://localhost:5173'
+];
+
+// Add Railway frontend URL from environment variable
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+  console.log('✅ Added FRONTEND_URL to CORS:', process.env.FRONTEND_URL);
+}
+
+// Add Railway production URLs (auto-detect)
+if (process.env.RAILWAY_STATIC_URL) {
+  allowedOrigins.push(`https://${process.env.RAILWAY_STATIC_URL}`);
+  console.log('✅ Added Railway URL to CORS:', process.env.RAILWAY_STATIC_URL);
+}
+
 const corsOptions = {
-  origin: [
-    'https://procalender-frontend.vercel.app',  // ✅ CORRECTED: Your actual frontend domain
-    'https://procalender-frontend-uma26madasus-projects.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173',
-    'https://localhost:3000',
-    'https://localhost:5173'
-  ],
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
     'Content-Type', 
