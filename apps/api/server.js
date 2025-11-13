@@ -2,11 +2,28 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
+
+// Load .env file only in development (Railway provides env vars directly)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 console.log('🚀 Starting Slotify Backend Server...');
+console.log('Environment:', process.env.NODE_ENV || 'development');
 console.log('Node version:', process.version);
 console.log('Current directory:', process.cwd());
+
+// Validate critical environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
+  console.error('Please set these environment variables in Railway dashboard or .env file');
+  process.exit(1);
+}
+
+console.log('✅ All required environment variables are set');
 console.log('MONGODB_URI from env (first 10 chars):', process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 10) + '...' : 'Missing');
 
 const app = express();
