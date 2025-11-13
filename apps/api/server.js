@@ -13,13 +13,20 @@ console.log('Environment:', process.env.NODE_ENV || 'development');
 console.log('Node version:', process.version);
 console.log('Current directory:', process.cwd());
 
+// Debug: Log all environment variable keys (not values for security)
+console.log('Available environment variables:', Object.keys(process.env).filter(key =>
+  !key.includes('PATH') && !key.includes('HOME') && !key.includes('PWD')
+).join(', '));
+
 // Validate critical environment variables
 const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingEnvVars.length > 0) {
   console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
-  console.error('Please set these environment variables in Railway dashboard or .env file');
+  console.error('Please set these environment variables in Railway dashboard');
+  console.error('Current NODE_ENV:', process.env.NODE_ENV);
+  console.error('Total env vars available:', Object.keys(process.env).length);
   process.exit(1);
 }
 
