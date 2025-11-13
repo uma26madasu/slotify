@@ -12,7 +12,7 @@ NODE_ENV=production
 
 # MongoDB Atlas Connection
 # Password already included and URL-encoded
-MONGODB_URI=mongodb+srv://umamadasu:Impala%40007@cluster0.wxajvjb.mongodb.net/slotify?retryWrites=true&w=majority&appName=Cluster0
+MONGODB_URI=mongodb+srv://umamadasu:Impala%40007@cluster0.wxajvjb.mongodb.net/slotify?appName=Cluster0
 
 # JWT Secret (Already Generated)
 JWT_SECRET=39111a93f1cb196ca4de31b0a4afebbb0af52d837236509c8ada2e3f4e6331fc

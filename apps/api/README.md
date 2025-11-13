@@ -1,21 +1,20 @@
+# Slotify Backend API
 
-# Calendly-Clone Scheduler App
+A full-featured advisor-client scheduling platform backend built with Node.js and Express.
 
-A full-featured advisor-client scheduling tool, built.
+## 📦 Repository
 
+**Monorepo**: [slotify](https://github.com/uma26madasu/slotify)
 
-## 📦 Repo
+This is the backend API service located at `apps/api/` in the Slotify monorepo.
 
-[👉 GitHub Repository] (https://github.com/uma26madasu/procalender_backend)
+---
 
-Live Link : https://procalender-backend.onrender.com
+## 🔐 Authentication
 
-
-## 🔐 Login
-
-- Use Google OAuth to sign in and connect calendars.
-- Connect multiple Google accounts to view merged availability.
-- Connect HubSpot CRM via OAuth (free test account supported).
+- Google OAuth for user authentication
+- JWT-based session management
+- Support for multiple Google Calendar accounts per user
 
 ---
 
@@ -25,92 +24,165 @@ Live Link : https://procalender-backend.onrender.com
 - Create **scheduling windows** (e.g., Mon 9am–12pm)
 - Create **scheduling links** with:
   - Custom usage limits
-  - Expiration date
+  - Expiration dates
   - Custom questions
-  - Meeting duration
-  - Max # days in advance
+  - Meeting duration settings
+  - Maximum days in advance for bookings
 
 ### Client Scheduling Flow
-- Visits a unique link (unauthenticated)
-- Picks a time slot
-- Enters:
-  - Email
+- Access scheduling via unique links (no authentication required)
+- Select from available time slots
+- Provide booking information:
+  - Email address
   - LinkedIn URL
-  - Custom question answers
-
----
-
-## 🧠 AI Contextual Augmentation
-
-- After a booking:
-  - Advisor receives an email with:
-    - Raw answers
-    - Augmented insights using:
-      - HubSpot contact notes (if available)
-      - OR scraped LinkedIn profile summary
-- Example:
-
-  ```
-  Q: What concerns do you have?
-  A: My daughter's wedding is going to be expensive
-
-  Context: Last time they were concerned about her college tuition.
-  ```
-
----
-
-## 📧 Email Notification
-
-- Advisors are notified via email when a new booking is made.
-- Email includes:
-  - Full form answers
-  - Context-augmented notes
+  - Custom question responses
 
 ---
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React, TailwindCSS
-- **Backend**: Node.js, Express
-- **Auth & Calendar**: Google OAuth, Calendar API
-- **CRM**: HubSpot OAuth + Contacts API
-- **AI**: Optional endpoint or local summarizer (mocked in demo)
-- **Email**: Nodemailer via Gmail
-- **Scraping**: Puppeteer (or placeholder/mock)
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB with Mongoose
+- **Authentication**: Google OAuth 2.0, JWT
+- **Calendar Integration**: Google Calendar API
+- **Email**: Nodemailer
+- **Environment**: dotenv for configuration
 
 ---
 
-## 🚀 Setup Locally (optional)
+## 🚀 Local Development
 
+### Prerequisites
+- Node.js >= 14.0.0
+- MongoDB Atlas account (or local MongoDB)
+- Google OAuth credentials
+
+### Setup
+
+1. Install dependencies (from monorepo root):
 ```bash
-git clone https://github.com/your-username/calendly-clone-scheduler.git
-cd calendly-clone-scheduler
-npm install
+pnpm install
+```
+
+2. Configure environment variables in `apps/api/.env`:
+```env
+# Server
+PORT=3001
+NODE_ENV=development
+
+# MongoDB
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/slotify
+
+# JWT
+JWT_SECRET=your_jwt_secret_here
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
+
+# Frontend
+FRONTEND_URL=http://localhost:3000
+
+# Optional: Email notifications
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+```
+
+3. Start the development server:
+```bash
+cd apps/api
 npm run dev
 ```
 
-Setup your `.env` with:
+The API will be available at `http://localhost:3001`
+
+---
+
+## 📚 API Endpoints
+
+### Health Check
+- `GET /` - API status check
+- `GET /api/test` - Test endpoint
+- `GET /api/test-config` - Configuration verification
+- `GET /api/mongodb-test` - MongoDB connection test
+
+### Authentication
+- `POST /api/auth/google/url` - Get Google OAuth URL
+- `POST /api/auth/google/callback` - Handle OAuth callback
+- `GET /api/auth/google/status` - Check OAuth status
+- `POST /api/auth/google/disconnect` - Disconnect Google account
+
+### Calendar
+- `GET /api/calendar/events` - Fetch calendar events
+- `POST /api/calendar/events` - Create calendar event
+
+### Bookings
+- `GET /api/bookings` - List bookings
+- `POST /api/bookings` - Create booking
+- `GET /api/bookings/:id` - Get booking details
+
+### Scheduling Windows
+- `GET /api/windows` - List scheduling windows
+- `POST /api/windows` - Create scheduling window
+- `PUT /api/windows/:id` - Update scheduling window
+- `DELETE /api/windows/:id` - Delete scheduling window
+
+### Scheduling Links
+- `GET /api/links` - List scheduling links
+- `POST /api/links` - Create scheduling link
+- `GET /api/links/:id` - Get link details
+- `PUT /api/links/:id` - Update scheduling link
+- `DELETE /api/links/:id` - Delete scheduling link
+
+---
+
+## 🗂 Project Structure
 
 ```
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-HUBSPOT_CLIENT_ID=
-HUBSPOT_CLIENT_SECRET=
-EMAIL_USER=
-EMAIL_PASS=
+apps/api/
+├── controllers/      # Request handlers
+├── models/          # Mongoose schemas
+├── routes/          # Express routes
+├── middleware/      # Auth & validation middleware
+├── services/        # Business logic
+├── utils/           # Helper functions
+├── server.js        # Application entry point
+├── package.json     # Dependencies
+└── .env            # Environment variables (gitignored)
 ```
 
 ---
 
-## 📌 Notes
+## 🔒 Security
 
-- AI augmentation and LinkedIn scraping can be mocked if full implementation is restricted due to scraping TOS.
-- OAuth flows are fully working with test accounts.
+- All sensitive data in `.env` (never committed)
+- JWT tokens for session management
+- CORS configured for trusted origins
+- Input validation with express-validator
+- MongoDB connection with authentication
 
 ---
 
-## 📅 Submission Info
+## 🚀 Deployment
 
-- Submitted: **May 12, 2025 before 10am MDT**
-- Completed by: Uma Madasu
-- Contact: umamadasu@gmail.com
+This API is designed to be deployed on Railway as part of the Slotify monorepo.
+
+### Environment Variables for Production
+
+See `RAILWAY_ENV_SETUP.md` in the repository root for the complete list of required environment variables.
+
+---
+
+## 📧 Contact
+
+- **Developer**: Uma Madasu
+- **Email**: umamadasu@gmail.com
+- **GitHub**: [@uma26madasu](https://github.com/uma26madasu)
+
+---
+
+## 📄 License
+
+MIT License - see repository root for details

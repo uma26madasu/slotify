@@ -2,11 +2,28 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
 
-console.log('🚀 Starting ProCalender Backend Server...');
+// Load .env file only in development (Railway provides env vars directly)
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
+console.log('🚀 Starting Slotify Backend Server...');
+console.log('Environment:', process.env.NODE_ENV || 'development');
 console.log('Node version:', process.version);
 console.log('Current directory:', process.cwd());
+
+// Validate critical environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
+  console.error('Please set these environment variables in Railway dashboard or .env file');
+  process.exit(1);
+}
+
+console.log('✅ All required environment variables are set');
 console.log('MONGODB_URI from env (first 10 chars):', process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 10) + '...' : 'Missing');
 
 const app = express();
@@ -21,8 +38,8 @@ console.log('🔧 Configuring CORS...');
 // Build allowed origins list
 const allowedOrigins = [
   // Vercel deployments
-  'https://procalender-frontend.vercel.app',
-  'https://procalender-frontend-uma26madasus-projects.vercel.app',
+  'https://slotify.vercel.app',
+  'https://slotify-uma26madasus-projects.vercel.app',
   // Local development
   'http://localhost:3000',
   'http://localhost:5173',
@@ -171,7 +188,7 @@ process.on('SIGINT', async () => {
 // Basic route for health check
 app.get('/', (req, res) => {
   res.json({
-    message: 'ProCalender Backend API is running',
+    message: 'Slotify Backend API is running',
     status: 'online',
     timestamp: new Date().toISOString(),
     version: '1.0.0'
@@ -363,10 +380,11 @@ app.use('*', (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log('🚀 Server running on port', PORT);
-  console.log('🌐 API URL:', `https://procalender-backend.onrender.com`);
-  console.log('📋 Test config:', `https://procalender-backend.onrender.com/api/test-config`);
-  console.log('🔧 Debug env:', `https://procalender-backend.onrender.com/api/debug/env`);
-  console.log('✅ ProCalender Backend is ready!');
+  console.log('🌐 Environment:', process.env.NODE_ENV || 'development');
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    console.log('🌐 API URL:', `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+  }
+  console.log('✅ Slotify Backend is ready!');
 });
 
 // Export app for testing

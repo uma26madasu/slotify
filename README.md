@@ -134,16 +134,26 @@ GOOGLE_CLIENT_SECRET=your_secret
 
 ## 🌐 Deployment
 
+### Railway (Recommended)
+
+This monorepo is configured for Railway deployment. See **[DEPLOY_TO_RAILWAY.md](./DEPLOY_TO_RAILWAY.md)** for complete step-by-step instructions.
+
+**Quick Deploy:**
+1. Push code to GitHub
+2. Create new Railway project from GitHub
+3. Add environment variables (see `.env.railway.template`)
+4. Railway auto-deploys!
+
 ### Frontend (Vercel)
 
-The frontend is configured for Vercel deployment:
+The frontend can be deployed separately to Vercel:
 
 ```bash
 cd apps/web
 vercel deploy
 ```
 
-### Backend (Render/Railway/Fly.io)
+### Alternative: Manual Deployment
 
 The backend can be deployed to any Node.js hosting platform:
 
