@@ -71,7 +71,8 @@ const checkFirebaseDomain = () => {
     'procalender-frontend-comtzqmuw-uma26madasus-projects.vercel.app',
     'procalender-frontend-knr7ns85g-uma26madasus-projects.vercel.app',
     'procalender-frontend-glt-main-uma26madasus-projects.vercel.app',
-    'procalender-frontend-gf2tk0lrv-uma26madasus-projects.vercel.app'
+    'procalender-frontend-gf2tk0lrv-uma26madasus-projects.vercel.app',
+    'slotifyui.up.railway.app'
   ];
 
   const isDomainAllowed = allowedDomains.includes(currentDomain);
