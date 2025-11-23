@@ -1,5 +1,5 @@
 // src/config/oauth.js - COMPLETE FIXED VERSION
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://procalender-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
 
 export const oauth = {
   // FIXED: Properly fetch OAuth URL from backend, then redirect to Google
