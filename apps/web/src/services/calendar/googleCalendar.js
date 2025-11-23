@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { auth } from '../../firebase/auth';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://procalender-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
