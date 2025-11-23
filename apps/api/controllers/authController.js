@@ -17,8 +17,10 @@ try {
   };
 }
 
-// Configuration constants
-const FRONTEND_REDIRECT_URI = 'https://procalender-frontend.vercel.app/auth/google/callback';
+// Configuration constants - Use environment variable or fallback to Railway frontend
+const FRONTEND_REDIRECT_URI = process.env.FRONTEND_URL
+  ? `${process.env.FRONTEND_URL}/auth/google/callback`
+  : process.env.GOOGLE_REDIRECT_URI || 'https://slotify-web-production.up.railway.app/auth/google/callback';
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/userinfo.profile',
@@ -26,6 +28,7 @@ const SCOPES = [
 ];
 
 console.log('📝 Auth controller configuration loaded');
+console.log('🔗 Frontend Redirect URI:', FRONTEND_REDIRECT_URI);
 
 // Helper function to create OAuth2 client
 const createOAuth2Client = () => {
