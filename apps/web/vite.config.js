@@ -10,7 +10,7 @@ function createEnvConfigFile(env) {
   const envConfig = `
     window.__ENV__ = {
       // API URL
-      VITE_API_URL: '${env.VITE_API_URL || 'https://slotify-backend.onrender.com'}',
+      VITE_API_URL: '${env.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app'}',
       
       // Firebase configuration
       VITE_FIREBASE_API_KEY: '${env.VITE_FIREBASE_API_KEY || 'AIzaSyCYsr6oZ3j-R7nJe6xWaRO6Q5xi0Rk3IV8'}',
@@ -63,7 +63,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: env.VITE_API_URL || 'https://slotify-backend.onrender.com',
+          target: env.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
           secure: true
@@ -104,7 +104,7 @@ export default defineConfig(({ mode }) => {
     define: {
       // Make environment variables available globally
       '__ENV__': JSON.stringify({
-        VITE_API_URL: env.VITE_API_URL || 'https://slotify-backend.onrender.com',
+        VITE_API_URL: env.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app',
         VITE_FIREBASE_API_KEY: env.VITE_FIREBASE_API_KEY || 'AIzaSyCYsr6oZ3j-R7nJe6xWaRO6Q5xi0Rk3IV8',
         VITE_FIREBASE_AUTH_DOMAIN: env.VITE_FIREBASE_AUTH_DOMAIN || 'procalenderfrontend.firebaseapp.com',
         VITE_FIREBASE_PROJECT_ID: env.VITE_FIREBASE_PROJECT_ID || 'procalenderfrontend',
