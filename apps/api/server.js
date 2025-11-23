@@ -44,7 +44,8 @@ console.log('🔧 Configuring CORS...');
 
 // Build allowed origins list
 const allowedOrigins = [
-  // Railway deployments
+  // Railway deployments (production)
+  'https://slotifyui.up.railway.app',
   'https://slotify-web-production.up.railway.app',
   'https://slotify-production.up.railway.app',
   // Vercel deployments
