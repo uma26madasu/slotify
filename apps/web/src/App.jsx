@@ -1,4 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Calendar,
+  Clock,
+  Users,
+  ChevronRight,
+  LogOut,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
+  Zap,
+  Shield,
+  Globe,
+  ArrowRight,
+  X,
+  MapPin,
+  Video,
+  ExternalLink,
+  Loader2,
+  CalendarDays,
+  Sparkles,
+  Menu,
+  Home,
+  Settings,
+  User
+} from 'lucide-react';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -8,18 +33,12 @@ function App() {
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [backendStatus, setBackendStatus] = useState('checking');
-  const [debugInfo, setDebugInfo] = useState([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // API configuration
   const API_BASE_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || window.location.origin + '/auth/google/callback';
-
-  // Add debug message
-  const addDebug = (message) => {
-    console.log(message);
-    setDebugInfo(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
 
   // Wake up backend on component mount
   useEffect(() => {
@@ -30,137 +49,56 @@ function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    
+
     if (code) {
-      addDebug('🔑 OAuth code received, processing...');
       handleAuthCallback(code);
     }
 
-    // Check if user is already logged in
-    const savedUser = localStorage.getItem('procalendar_user');
+    const savedUser = localStorage.getItem('slotify_user');
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
         setUser(userData);
-        addDebug(`👤 Found saved user: ${userData.name || userData.email}`);
-        // Load calendar events if user is logged in
         fetchCalendarEvents(userData);
       } catch (error) {
-        addDebug('❌ Error parsing saved user data');
-        localStorage.removeItem('procalendar_user');
+        localStorage.removeItem('slotify_user');
       }
     }
   }, []);
 
-  // Wake up the backend (Render free tier sleeps after 15 minutes)
   const wakeUpBackend = async () => {
-    addDebug('🔄 Checking backend status...');
     setBackendStatus('waking');
-    
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-      
-      // Try the root endpoint first (as shown in your backend response)
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const response = await fetch(`${API_BASE_URL}/`, {
         method: 'GET',
         signal: controller.signal,
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
+        headers: { 'Cache-Control': 'no-cache' }
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
-        const data = await response.json();
-        if (data.status === 'Success') {
-          setBackendStatus('online');
-          addDebug(`✅ Backend online: ${data.message}`);
-        } else {
-          setBackendStatus('online');
-          addDebug('✅ Backend is responding');
-        }
+        setBackendStatus('online');
       } else {
         setBackendStatus('error');
-        addDebug(`⚠️ Backend responded but with error: ${response.status}`);
-        // Still try alternative endpoints
-        await tryAlternativeEndpoints();
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
-        addDebug('⏱️ Backend wake-up timeout, trying alternatives...');
-        setBackendStatus('timeout');
-        await tryAlternativeEndpoints();
-      } else {
-        addDebug(`❌ Backend connection error: ${error.message}`);
-        await tryAlternativeEndpoints();
-      }
+      setBackendStatus('error');
     }
   };
 
-  // Try alternative endpoints to wake up backend
-  const tryAlternativeEndpoints = async () => {
-    const endpoints = ['/', '/api/status', '/health', '/api/health'];
-    
-    for (const endpoint of endpoints) {
-      try {
-        addDebug(`🔄 Trying ${API_BASE_URL}${endpoint}...`);
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-          method: 'GET',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-        
-        if (response.ok) {
-          const text = await response.text();
-          try {
-            const data = JSON.parse(text);
-            if (data.status === 'Success' || data.message) {
-              setBackendStatus('online');
-              addDebug(`✅ Backend online via ${endpoint}: ${data.message || 'API ready'}`);
-              return;
-            }
-          } catch {
-            // Not JSON, but response was OK
-            setBackendStatus('online');
-            addDebug(`✅ Backend responding via ${endpoint}`);
-            return;
-          }
-        }
-      } catch (error) {
-        addDebug(`❌ ${endpoint} failed: ${error.message}`);
-        continue;
-      }
-    }
-    
-    addDebug('😴 All endpoints failed. Backend may be starting up...');
-    setBackendStatus('error');
-  };
-
-  // Handle Google OAuth login
   const handleGoogleLogin = () => {
     if (!GOOGLE_CLIENT_ID) {
-      addDebug('❌ Google Client ID not configured');
       alert('Google Client ID not configured. Please check your environment variables.');
       return;
     }
 
-    if (backendStatus !== 'online') {
-      addDebug('⚠️ Backend not ready, attempting to wake up first...');
-      wakeUpBackend();
-      setTimeout(() => {
-        if (backendStatus === 'online') {
-          handleGoogleLogin();
-        } else {
-          alert('⚠️ Backend is starting up. Please wait a moment and try again.');
-        }
-      }, 3000);
-      return;
-    }
-
-    addDebug('🔄 Starting Google OAuth flow...');
     setIsLoadingAuth(true);
-    
+
     const scope = [
       'openid',
       'profile',
@@ -177,116 +115,57 @@ function App() {
       `access_type=offline&` +
       `prompt=consent`;
 
-    addDebug('↗️ Redirecting to Google OAuth...');
     window.location.href = authUrl;
   };
 
-  // Handle auth callback - send code to backend
   const handleAuthCallback = async (code) => {
     setIsLoadingAuth(true);
-    addDebug('🔄 Processing OAuth callback with backend...');
-    
+
     try {
-      // Ensure backend is awake before processing
-      if (backendStatus !== 'online') {
-        addDebug('🔄 Ensuring backend is ready for OAuth...');
-        await wakeUpBackend();
-        // Give it a moment to be ready
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-      
-      // Try multiple auth endpoints
-      const authEndpoints = [
-        '/auth/google/callback',
-        '/api/auth/google/callback', 
-        '/api/auth/callback',
-        '/google/callback'
-      ];
-      
+      const authEndpoints = ['/auth/google/callback', '/api/auth/google/callback'];
       let authSuccess = false;
       let userData = null;
-      
+
       for (const endpoint of authEndpoints) {
         try {
-          addDebug(`🔄 Trying auth endpoint: ${endpoint}`);
-          
           const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-cache'
-            },
-            body: JSON.stringify({
-              code: code,
-              redirect_uri: REDIRECT_URI
-            }),
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+            body: JSON.stringify({ code, redirect_uri: REDIRECT_URI }),
           });
 
           if (response.ok) {
             userData = await response.json();
-            addDebug(`✅ Auth successful via ${endpoint}: ${userData.name || userData.email}`);
             authSuccess = true;
             break;
-          } else {
-            const errorText = await response.text();
-            addDebug(`❌ Auth failed via ${endpoint}: ${response.status} - ${errorText}`);
           }
-        } catch (endpointError) {
-          addDebug(`❌ ${endpoint} error: ${endpointError.message}`);
+        } catch (e) {
           continue;
         }
       }
 
-      if (!authSuccess) {
-        throw new Error('All auth endpoints failed. Please check backend configuration.');
+      if (authSuccess && userData) {
+        setUser(userData);
+        localStorage.setItem('slotify_user', JSON.stringify(userData));
+        setCurrentPage('dashboard');
+        await fetchCalendarEvents(userData);
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
-      
-      setUser(userData);
-      localStorage.setItem('procalendar_user', JSON.stringify(userData));
-      setCurrentPage('dashboard');
-      
-      // Fetch calendar events immediately
-      await fetchCalendarEvents(userData);
-      
-      // Clean up URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
     } catch (error) {
-      addDebug(`❌ OAuth processing failed: ${error.message}`);
-      alert(`❌ Authentication failed: ${error.message}\n\nTip: Your backend is online but may need auth endpoint configuration.`);
+      alert(`Authentication failed: ${error.message}`);
     } finally {
       setIsLoadingAuth(false);
     }
   };
 
-  // Fetch calendar events from backend
   const fetchCalendarEvents = async (userData) => {
     setIsLoadingEvents(true);
-    addDebug('🔄 Fetching calendar events from backend...');
-    
+
     try {
-      // Ensure backend is ready
-      if (backendStatus !== 'online') {
-        addDebug('🔄 Ensuring backend is awake...');
-        await wakeUpBackend();
-      }
-      
-      // Try multiple calendar endpoints
-      const calendarEndpoints = [
-        '/api/calendar/events',
-        '/calendar/events',
-        '/api/events',
-        '/events',
-        '/api/calendar'
-      ];
-      
-      let eventsLoaded = false;
-      let events = [];
-      
+      const calendarEndpoints = ['/api/calendar/events', '/calendar/events'];
+
       for (const endpoint of calendarEndpoints) {
         try {
-          addDebug(`🔄 Trying calendar endpoint: ${endpoint}`);
-          
           const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             method: 'GET',
             headers: {
@@ -298,318 +177,152 @@ function App() {
 
           if (response.ok) {
             const data = await response.json();
-            events = data.events || data.items || data || [];
-            addDebug(`✅ Loaded ${events.length} events via ${endpoint}`);
-            eventsLoaded = true;
+            setCalendarEvents(data.events || data.items || data || []);
             break;
-          } else {
-            addDebug(`❌ ${endpoint} failed: ${response.status}`);
           }
-        } catch (endpointError) {
-          addDebug(`❌ ${endpoint} error: ${endpointError.message}`);
+        } catch (e) {
           continue;
         }
       }
-
-      if (!eventsLoaded) {
-        throw new Error('All calendar endpoints failed');
-      }
-      
-      setCalendarEvents(events);
-      
     } catch (error) {
-      addDebug(`❌ Backend calendar fetch failed: ${error.message}`);
-      
-      // Try direct Google Calendar API as last resort
-      if (userData.accessToken && userData.accessToken.startsWith('ya29.')) {
-        addDebug('🔄 Trying direct Google Calendar API...');
-        await fetchCalendarEventsDirect(userData.accessToken);
-      } else {
-        addDebug('❌ No valid access token for direct API call');
-        addDebug('💡 Tip: Backend is online but calendar endpoints may need configuration');
-      }
+      console.error('Failed to fetch events:', error);
     } finally {
       setIsLoadingEvents(false);
     }
   };
 
-  // Direct Google Calendar API call (fallback only)
-  const fetchCalendarEventsDirect = async (accessToken) => {
-    try {
-      const now = new Date();
-      const timeMin = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const timeMax = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
-
-      const response = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
-        `timeMin=${timeMin}&` +
-        `timeMax=${timeMax}&` +
-        `singleEvents=true&` +
-        `orderBy=startTime&` +
-        `maxResults=50`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Google Calendar API failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setCalendarEvents(data.items || []);
-      addDebug(`✅ Loaded ${data.items?.length || 0} events from direct Google API`);
-      
-    } catch (error) {
-      addDebug(`❌ Direct Google Calendar API failed: ${error.message}`);
-      throw error;
-    }
-  };
-
-  // Refresh calendar events
-  const refreshEvents = () => {
-    if (user) {
-      addDebug('🔄 Refreshing calendar events...');
-      fetchCalendarEvents(user);
-    }
-  };
-
-  // Force wake backend
-  const forceWakeBackend = () => {
-    addDebug('🔄 Force waking backend...');
-    wakeUpBackend();
-  };
-
-  // Handle logout
   const handleLogout = () => {
-    addDebug('👋 User logged out');
     setUser(null);
     setCalendarEvents([]);
-    localStorage.removeItem('procalendar_user');
+    localStorage.removeItem('slotify_user');
     setCurrentPage('dashboard');
   };
 
-  // Format date for display
   const formatEventTime = (event) => {
     const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
     const end = event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end?.date);
-    
-    if (event.start?.date) {
-      return 'All day';
-    }
-    
+
+    if (event.start?.date) return 'All day';
+
     return `${start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
   };
 
-  // Get events for a specific date
-  const getEventsForDate = (date) => {
-    return calendarEvents.filter(event => {
-      const eventDate = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
-      return eventDate.getDate() === date && eventDate.getMonth() === new Date().getMonth();
-    });
+  const getUpcomingEvents = () => {
+    return calendarEvents
+      .filter(event => new Date(event.start?.dateTime || event.start?.date) >= new Date())
+      .slice(0, 5);
   };
 
-  // Backend status indicator
-  const BackendStatus = () => {
-    const statusColors = {
-      checking: '#ffc107',
-      waking: '#17a2b8', 
-      online: '#28a745',
-      sleeping: '#6c757d',
-      timeout: '#fd7e14',
-      offline: '#dc3545',
-      error: '#dc3545'
+  // Status Badge Component
+  const StatusBadge = () => {
+    const statusConfig = {
+      checking: { color: 'bg-yellow-100 text-yellow-800', icon: Loader2, text: 'Connecting...', animate: true },
+      waking: { color: 'bg-blue-100 text-blue-800', icon: Loader2, text: 'Starting...', animate: true },
+      online: { color: 'bg-green-100 text-green-800', icon: CheckCircle, text: 'Online', animate: false },
+      error: { color: 'bg-red-100 text-red-800', icon: AlertCircle, text: 'Offline', animate: false }
     };
 
-    const statusMessages = {
-      checking: '🔄 Checking backend...',
-      waking: '⏰ Waking up backend...',
-      online: '✅ Backend online',
-      sleeping: '😴 Backend sleeping',
-      timeout: '⏱️ Backend timeout',
-      offline: '❌ Backend offline',
-      error: '⚠️ Backend error'
-    };
+    const config = statusConfig[backendStatus];
+    const Icon = config.icon;
 
     return (
-      <div style={{
-        padding: '10px 15px',
-        backgroundColor: statusColors[backendStatus],
-        color: 'white',
-        borderRadius: '5px',
-        fontSize: '14px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <span>{statusMessages[backendStatus]}</span>
-        {(backendStatus === 'sleeping' || backendStatus === 'offline') && (
-          <button 
-            onClick={forceWakeBackend}
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              border: '1px solid white',
-              color: 'white',
-              padding: '5px 10px',
-              borderRadius: '3px',
-              cursor: 'pointer',
-              fontSize: '12px'
-            }}
-          >
-            Wake Up
-          </button>
-        )}
-      </div>
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        <Icon className={`w-3.5 h-3.5 ${config.animate ? 'animate-spin' : ''}`} />
+        {config.text}
+      </span>
     );
   };
 
-  // Event detail modal
+  // Event Modal Component
   const EventModal = ({ event, onClose }) => {
     if (!event) return null;
 
     const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
-    const end = event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end?.date);
 
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }} onClick={onClose}>
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '10px',
-          padding: '30px',
-          maxWidth: '500px',
-          width: '90%',
-          maxHeight: '80vh',
-          overflow: 'auto'
-        }} onClick={e => e.stopPropagation()}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ margin: 0 }}>{event.summary || 'Untitled Event'}</h2>
-            <button onClick={onClose} style={{ 
-              background: 'none', 
-              border: 'none', 
-              fontSize: '24px', 
-              cursor: 'pointer' 
-            }}>×</button>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <strong>📅 Date:</strong> {start.toLocaleDateString()}
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <strong>🕐 Time:</strong> {formatEventTime(event)}
-          </div>
-
-          {event.location && (
-            <div style={{ marginBottom: '15px' }}>
-              <strong>📍 Location:</strong> {event.location}
-            </div>
-          )}
-
-          {event.description && (
-            <div style={{ marginBottom: '15px' }}>
-              <strong>📝 Description:</strong>
-              <div style={{ 
-                marginTop: '5px', 
-                padding: '10px', 
-                backgroundColor: '#f8f9fa', 
-                borderRadius: '5px',
-                whiteSpace: 'pre-wrap'
-              }}>
-                {event.description}
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto animate-slideInUp" onClick={e => e.stopPropagation()}>
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-gray-900">{event.summary || 'Untitled Event'}</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
               </div>
+              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
             </div>
-          )}
+          </div>
 
-          {event.attendees && event.attendees.length > 0 && (
-            <div style={{ marginBottom: '15px' }}>
-              <strong>👥 Attendees ({event.attendees.length}):</strong>
-              <div style={{ marginTop: '10px' }}>
-                {event.attendees.map((attendee, index) => (
-                  <div key={index} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    marginBottom: '8px',
-                    padding: '8px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '5px'
-                  }}>
-                    <span style={{ 
-                      display: 'inline-block',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: attendee.responseStatus === 'accepted' ? '#28a745' : 
-                                    attendee.responseStatus === 'declined' ? '#dc3545' : '#ffc107',
-                      marginRight: '8px'
-                    }}></span>
-                    <span>{attendee.displayName || attendee.email}</span>
-                    {attendee.organizer && <span style={{ 
-                      marginLeft: '8px', 
-                      fontSize: '12px', 
-                      color: '#666',
-                      backgroundColor: '#e9ecef',
-                      padding: '2px 6px',
-                      borderRadius: '3px'
-                    }}>Organizer</span>}
+          <div className="p-6 space-y-4">
+            <div className="flex items-center gap-3 text-gray-700">
+              <Clock className="w-5 h-5 text-indigo-500" />
+              <span>{formatEventTime(event)}</span>
+            </div>
+
+            {event.location && (
+              <div className="flex items-center gap-3 text-gray-700">
+                <MapPin className="w-5 h-5 text-indigo-500" />
+                <span>{event.location}</span>
+              </div>
+            )}
+
+            {event.attendees && event.attendees.length > 0 && (
+              <div className="flex items-start gap-3">
+                <Users className="w-5 h-5 text-indigo-500 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500 mb-2">{event.attendees.length} attendees</p>
+                  <div className="flex flex-wrap gap-2">
+                    {event.attendees.slice(0, 5).map((attendee, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
+                        <span className={`w-2 h-2 rounded-full ${
+                          attendee.responseStatus === 'accepted' ? 'bg-green-500' :
+                          attendee.responseStatus === 'declined' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`} />
+                        {attendee.displayName || attendee.email?.split('@')[0]}
+                      </span>
+                    ))}
+                    {event.attendees.length > 5 && (
+                      <span className="text-xs text-gray-500">+{event.attendees.length - 5} more</span>
+                    )}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {event.conferenceData?.entryPoints && (
-            <div style={{ marginBottom: '15px' }}>
-              <strong>💻 Meeting Links:</strong>
-              <div style={{ marginTop: '10px' }}>
-                {event.conferenceData.entryPoints.map((entry, index) => (
-                  <a 
-                    key={index}
-                    href={entry.uri} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'inline-block',
-                      padding: '8px 16px',
-                      backgroundColor: '#007bff',
-                      color: 'white',
-                      textDecoration: 'none',
-                      borderRadius: '5px',
-                      marginRight: '10px',
-                      marginBottom: '5px'
-                    }}
-                  >
-                    🔗 {entry.entryPointType === 'video' ? 'Join Video Call' : 'Join Meeting'}
-                  </a>
-                ))}
+            {event.description && (
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{event.description}</p>
               </div>
-            </div>
-          )}
+            )}
+
+            {event.conferenceData?.entryPoints && (
+              <div className="pt-4">
+                <a
+                  href={event.conferenceData.entryPoints[0]?.uri}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  <Video className="w-4 h-4" />
+                  Join Meeting
+                </a>
+              </div>
+            )}
+          </div>
 
           {event.htmlLink && (
-            <div style={{ marginTop: '20px' }}>
-              <a 
-                href={event.htmlLink} 
-                target="_blank" 
+            <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
+              <a
+                href={event.htmlLink}
+                target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  color: '#007bff',
-                  textDecoration: 'none'
-                }}
+                className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
               >
-                📅 View in Google Calendar →
+                <ExternalLink className="w-4 h-4" />
+                View in Google Calendar
               </a>
             </div>
           )}
@@ -618,633 +331,487 @@ function App() {
     );
   };
 
-  // Debug panel
-  const DebugPanel = () => (
-    <details style={{ marginTop: '20px' }}>
-      <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>🔍 Debug Log</summary>
-      <div style={{ 
-        marginTop: '10px',
-        padding: '10px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '5px',
-        fontSize: '12px',
-        maxHeight: '200px',
-        overflowY: 'auto',
-        fontFamily: 'monospace'
-      }}>
-        {debugInfo.map((info, index) => (
-          <div key={index} style={{ marginBottom: '2px' }}>{info}</div>
-        ))}
+  // Landing Page Component
+  const LandingPage = () => (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"30\" height=\"30\" viewBox=\"0 0 30 30\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z\" fill=\"rgba(255,255,255,0.05)\"%3E%3C/path%3E%3C/svg%3E')] opacity-40" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+
+        {/* Navigation */}
+        <nav className="relative z-10 px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <CalendarDays className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-white">Slotify</span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <StatusBadge />
+              {user ? (
+                <button
+                  onClick={() => setCurrentPage('dashboard')}
+                  className="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                >
+                  Go to Dashboard
+                </button>
+              ) : (
+                <button
+                  onClick={handleGoogleLogin}
+                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  className="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isLoadingAuth ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    'Get Started'
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-indigo-300 text-sm mb-8">
+              <Sparkles className="w-4 h-4" />
+              Smart Scheduling Made Simple
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              Schedule meetings
+              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent"> without the back-and-forth</span>
+            </h1>
+
+            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+              Slotify connects to your calendar and lets others book time with you automatically.
+              No more endless email chains to find a meeting time.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={handleGoogleLogin}
+                disabled={backendStatus !== 'online' || isLoadingAuth}
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              >
+                {isLoadingAuth ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => setCurrentPage('dashboard')}
+                className="w-full sm:w-auto px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+              >
+                View Demo
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </details>
+
+      {/* Features Section */}
+      <div className="relative z-10 bg-white py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Everything you need for smart scheduling
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Powerful features to save you time and eliminate scheduling headaches.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: Calendar,
+                title: 'Calendar Sync',
+                description: 'Automatically syncs with Google Calendar to show your real-time availability.',
+                color: 'from-blue-500 to-cyan-500'
+              },
+              {
+                icon: Zap,
+                title: 'Instant Booking',
+                description: 'Let others book meetings with you in seconds with shareable booking links.',
+                color: 'from-indigo-500 to-purple-500'
+              },
+              {
+                icon: Shield,
+                title: 'Smart Conflicts',
+                description: 'Never double-book again. Slotify automatically prevents scheduling conflicts.',
+                color: 'from-emerald-500 to-teal-500'
+              },
+              {
+                icon: Globe,
+                title: 'Timezone Magic',
+                description: 'Automatically detects and converts timezones for international meetings.',
+                color: 'from-orange-500 to-pink-500'
+              },
+              {
+                icon: Users,
+                title: 'Team Scheduling',
+                description: 'Coordinate group meetings by finding times that work for everyone.',
+                color: 'from-violet-500 to-purple-500'
+              },
+              {
+                icon: Clock,
+                title: 'Buffer Times',
+                description: 'Set buffer times between meetings to give yourself breathing room.',
+                color: 'from-rose-500 to-pink-500'
+              }
+            ].map((feature, i) => (
+              <div key={i} className="group p-8 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300">
+                <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                  <feature.icon className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="relative z-10 bg-gradient-to-r from-indigo-600 to-purple-600 py-20">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Ready to take control of your calendar?
+          </h2>
+          <p className="text-xl text-indigo-100 mb-8">
+            Join thousands of professionals who save hours every week with Slotify.
+          </p>
+          <button
+            onClick={handleGoogleLogin}
+            disabled={backendStatus !== 'online' || isLoadingAuth}
+            className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors shadow-lg disabled:opacity-50"
+          >
+            Start Scheduling for Free
+          </button>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 bg-slate-900 py-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-lg font-semibold text-white">Slotify</span>
+            </div>
+            <p className="text-gray-500 text-sm">
+              &copy; {new Date().getFullYear()} Slotify. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 
-  // Simple page navigation
-  const renderPage = () => {
-    if (isLoadingAuth) {
-      return (
-        <div style={{ 
-          padding: '60px', 
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '20px' }}>🔄</div>
-          <h2>Connecting to Google...</h2>
-          <p>Please wait while we set up your account.</p>
-          <BackendStatus />
+  // Dashboard Component
+  const Dashboard = () => (
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col">
+        <div className="p-6">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <CalendarDays className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">Slotify</span>
+          </div>
         </div>
-      );
-    }
 
-    switch(currentPage) {
-      case 'login':
-        if (user) {
-          return (
-            <div style={{ padding: '40px', textAlign: 'center' }}>
-              <h1>👋 Welcome back, {user.name}!</h1>
-              <div style={{ 
-                maxWidth: '400px', 
-                margin: '20px auto',
-                padding: '30px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '10px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-              }}>
-                <img 
-                  src={user.picture} 
-                  alt="Profile" 
-                  style={{ 
-                    width: '80px', 
-                    height: '80px', 
-                    borderRadius: '50%',
-                    marginBottom: '20px'
-                  }}
-                />
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Status:</strong> ✅ Google Calendar Connected</p>
-                <p><strong>Events Loaded:</strong> {calendarEvents.length} events this month</p>
-                
-                <div style={{ marginBottom: '20px' }}>
-                  <BackendStatus />
-                </div>
-                
-                <button 
-                  onClick={refreshEvents}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer',
-                    marginBottom: '10px'
-                  }}
-                  disabled={isLoadingEvents}
-                >
-                  {isLoadingEvents ? '🔄 Refreshing...' : '🔄 Refresh Calendar'}
-                </button>
-                
-                <button 
-                  onClick={handleLogout}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  🚪 Sign Out
-                </button>
-
-                <DebugPanel />
-              </div>
-            </div>
-          );
-        }
-
-        return (
-          <div style={{ padding: '40px', textAlign: 'center' }}>
-            <h1>🔑 Login to ProCalendar</h1>
-            <p style={{ marginBottom: '30px', color: '#666' }}>
-              Connect your Google account to access your calendar and schedule meetings
-            </p>
-            
-            <div style={{ marginBottom: '20px' }}>
-              <BackendStatus />
-            </div>
-            
-            <div style={{ 
-              maxWidth: '400px', 
-              margin: '20px auto',
-              padding: '30px',
-              backgroundColor: 'white',
-              borderRadius: '10px',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-            }}>
-              <button 
-                style={{
-                  width: '100%',
-                  padding: '15px',
-                  backgroundColor: backendStatus === 'online' ? '#4285f4' : '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  cursor: backendStatus === 'online' ? 'pointer' : 'not-allowed',
-                  marginBottom: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                onClick={handleGoogleLogin}
-                disabled={!GOOGLE_CLIENT_ID || backendStatus !== 'online'}
+        <nav className="flex-1 px-4">
+          <div className="space-y-1">
+            {[
+              { icon: Home, label: 'Dashboard', page: 'dashboard' },
+              { icon: Calendar, label: 'Calendar', page: 'calendar' },
+              { icon: User, label: 'Account', page: 'login' },
+              { icon: Settings, label: 'Settings', page: 'settings' }
+            ].map((item) => (
+              <button
+                key={item.page}
+                onClick={() => setCurrentPage(item.page)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${
+                  currentPage === item.page
+                    ? 'bg-indigo-50 text-indigo-600'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
               >
-                🔐 Continue with Google
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
               </button>
-              
-              {backendStatus !== 'online' && (
-                <p style={{ color: '#dc3545', fontSize: '14px', marginTop: '10px' }}>
-                  ⚠️ Please wait for backend to wake up before logging in
-                </p>
-              )}
-              
-              {!GOOGLE_CLIENT_ID && (
-                <p style={{ color: '#dc3545', fontSize: '14px', marginTop: '10px' }}>
-                  ⚠️ Google OAuth not configured
-                </p>
-              )}
-            </div>
-
-            <DebugPanel />
+            ))}
           </div>
-        );
-      
-      case 'calendar':
-        return (
-          <div style={{ padding: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h1>📅 Calendar View</h1>
-              {user && (
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <button 
-                    onClick={refreshEvents}
-                    style={{
-                      padding: '8px 16px',
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer',
-                      marginRight: '15px'
-                    }}
-                    disabled={isLoadingEvents}
-                  >
-                    {isLoadingEvents ? '🔄' : '🔄 Refresh'}
-                  </button>
-                  <img 
-                    src={user.picture} 
-                    alt="Profile" 
-                    style={{ 
-                      width: '32px', 
-                      height: '32px', 
-                      borderRadius: '50%',
-                      marginRight: '10px'
-                    }}
-                  />
-                  <span>{user.name}</span>
+        </nav>
+
+        {user && (
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+              {user.picture ? (
+                <img src={user.picture} alt="" className="w-10 h-10 rounded-full" />
+              ) : (
+                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-indigo-600" />
                 </div>
               )}
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <BackendStatus />
-            </div>
-            
-            {!user && (
-              <div style={{ 
-                backgroundColor: '#fff3cd',
-                border: '1px solid #ffeaa7',
-                borderRadius: '8px',
-                padding: '15px',
-                marginBottom: '20px'
-              }}>
-                ⚠️ Please <button 
-                  onClick={() => setCurrentPage('login')}
-                  style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    color: '#007bff', 
-                    textDecoration: 'underline',
-                    cursor: 'pointer' 
-                  }}
-                >
-                  sign in
-                </button> to access your Google Calendar
-              </div>
-            )}
-
-            {user && (
-              <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-                <span style={{ 
-                  backgroundColor: calendarEvents.length > 0 ? '#d4edda' : '#fff3cd',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  fontSize: '14px'
-                }}>
-                  📊 {calendarEvents.length} events loaded for {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </span>
-              </div>
-            )}
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(7, 1fr)', 
-              gap: '2px',
-              marginTop: '30px',
-              backgroundColor: '#f8f9fa',
-              padding: '20px',
-              borderRadius: '10px'
-            }}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} style={{ 
-                  padding: '15px', 
-                  backgroundColor: '#007bff', 
-                  color: 'white',
-                  textAlign: 'center',
-                  fontWeight: 'bold',
-                  borderRadius: '5px'
-                }}>
-                  {day}
-                </div>
-              ))}
-              {Array.from({length: 35}, (_, i) => {
-                const date = i + 1;
-                const dayEvents = user ? getEventsForDate(date) : [];
-                
-                return (
-                  <div key={i} style={{ 
-                    padding: '8px', 
-                    backgroundColor: 'white',
-                    minHeight: '100px',
-                    borderRadius: '5px',
-                    border: '1px solid #dee2e6',
-                    fontSize: '14px',
-                    position: 'relative',
-                    cursor: dayEvents.length > 0 ? 'pointer' : 'default'
-                  }}>
-                    <div style={{ 
-                      fontWeight: 'bold', 
-                      marginBottom: '5px',
-                      color: date <= 31 ? '#333' : '#ccc'
-                    }}>
-                      {date <= 31 ? date : ''}
-                    </div>
-                    
-                    {dayEvents.slice(0, 3).map((event, eventIndex) => (
-                      <div 
-                        key={eventIndex} 
-                        style={{
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          padding: '2px 6px',
-                          borderRadius: '3px',
-                          fontSize: '10px',
-                          marginBottom: '2px',
-                          cursor: 'pointer',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
-                        onClick={() => setSelectedEvent(event)}
-                        title={event.summary}
-                      >
-                        {event.summary || 'Untitled'}
-                      </div>
-                    ))}
-                    
-                    {dayEvents.length > 3 && (
-                      <div style={{
-                        fontSize: '10px',
-                        color: '#666',
-                        fontStyle: 'italic'
-                      }}>
-                        +{dayEvents.length - 3} more
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <EventModal 
-              event={selectedEvent} 
-              onClose={() => setSelectedEvent(null)} 
-            />
-
-            <DebugPanel />
-          </div>
-        );
-      
-      default: // dashboard
-        return (
-          <div style={{ padding: '40px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h1 style={{ fontSize: '2.5em', margin: 0 }}>
-                📅 ProCalendar Dashboard
-              </h1>
-              {user && (
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <img 
-                    src={user.picture} 
-                    alt="Profile" 
-                    style={{ 
-                      width: '40px', 
-                      height: '40px', 
-                      borderRadius: '50%',
-                      marginRight: '10px'
-                    }}
-                  />
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>{user.name}</div>
-                    <div style={{ fontSize: '12px', color: '#666' }}>
-                      {calendarEvents.length} events loaded ✅
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <BackendStatus />
-            </div>
-            
-            <p style={{ fontSize: '1.2em', marginBottom: '40px', color: '#666' }}>
-              Welcome to your professional calendar management system!
-            </p>
-            
-            {!user && (
-              <div style={{ 
-                backgroundColor: '#d4edda',
-                border: '1px solid #c3e6cb',
-                borderRadius: '8px',
-                padding: '15px',
-                marginBottom: '30px'
-              }}>
-                🎯 <strong>Get Started:</strong> <button 
-                  onClick={() => setCurrentPage('login')}
-                  style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    color: '#007bff', 
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Connect your Google account
-                </button> to access your calendar and start scheduling!
-              </div>
-            )}
-
-            {user && calendarEvents.length > 0 && (
-              <div style={{ 
-                backgroundColor: '#f8f9fa',
-                borderRadius: '10px',
-                padding: '20px',
-                marginBottom: '30px'
-              }}>
-                <h3>🗓️ Upcoming Events</h3>
-                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                  {calendarEvents
-                    .filter(event => new Date(event.start?.dateTime || event.start?.date) >= new Date())
-                    .slice(0, 5)
-                    .map((event, index) => (
-                    <div 
-                      key={index} 
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '10px',
-                        backgroundColor: 'white',
-                        borderRadius: '5px',
-                        marginBottom: '8px',
-                        cursor: 'pointer',
-                        border: '1px solid #dee2e6'
-                      }}
-                      onClick={() => setSelectedEvent(event)}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{event.summary || 'Untitled Event'}</div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                          {formatEventTime(event)} • {new Date(event.start?.dateTime || event.start?.date).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '12px', color: '#007bff' }}>View Details →</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-              gap: '20px',
-              marginTop: '30px'
-            }}>
-              <div style={{
-                padding: '30px',
-                backgroundColor: user ? '#007bff' : '#6c757d',
-                color: 'white',
-                borderRadius: '10px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                opacity: user ? 1 : 0.7
-              }}
-              onClick={() => setCurrentPage('calendar')}
-              onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-              >
-                <h3 style={{ margin: '0 0 15px 0', fontSize: '1.5em' }}>📅 Calendar</h3>
-                <p style={{ margin: 0 }}>
-                  {user ? `View ${calendarEvents.length} events` : 'Connect Google to view calendar'}
-                </p>
-              </div>
-              
-              <div style={{
-                padding: '30px',
-                backgroundColor: user ? '#28a745' : '#17a2b8',
-                color: 'white',
-                borderRadius: '10px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                transition: 'transform 0.2s'
-              }}
-              onClick={() => setCurrentPage('login')}
-              onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-              >
-                <h3 style={{ margin: '0 0 15px 0', fontSize: '1.5em' }}>
-                  {user ? '👤 Account' : '🔑 Login'}
-                </h3>
-                <p style={{ margin: 0 }}>
-                  {user ? 'Manage your account settings' : 'Connect your Google account'}
-                </p>
-              </div>
-              
-              <div style={{
-                padding: '30px',
-                backgroundColor: '#17a2b8',
-                color: 'white',
-                borderRadius: '10px',
-                textAlign: 'center',
-                cursor: 'pointer',
-                transition: 'transform 0.2s'
-              }}
-              onClick={user ? refreshEvents : forceWakeBackend}
-              onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-              >
-                <h3 style={{ margin: '0 0 15px 0', fontSize: '1.5em' }}>🔄 Sync</h3>
-                <p style={{ margin: 0 }}>
-                  {user ? 'Refresh calendar data' : 'Wake up backend'}
-                </p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
               </div>
             </div>
-
-            <EventModal 
-              event={selectedEvent} 
-              onClose={() => setSelectedEvent(null)} 
-            />
-
-            <DebugPanel />
-          </div>
-        );
-    }
-  };
-
-  return (
-    <div style={{ 
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Navigation Header */}
-      <nav style={{ 
-        background: 'rgba(255,255,255,0.1)', 
-        padding: '15px 30px',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255,255,255,0.2)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button 
-            onClick={() => setCurrentPage('dashboard')}
-            style={{ 
-              background: 'none',
-              border: 'none',
-              color: 'white', 
-              fontSize: '24px',
-              fontWeight: 'bold',
-              cursor: 'pointer'
-            }}
-          >
-            📅 ProCalendar
-          </button>
-          
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button 
-              onClick={() => setCurrentPage('dashboard')}
-              style={{
-                background: currentPage === 'dashboard' ? 'rgba(255,255,255,0.2)' : 'none',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                padding: '8px 16px',
-                margin: '0 5px',
-                borderRadius: '20px',
-                cursor: 'pointer'
-              }}
+            <button
+              onClick={handleLogout}
+              className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             >
-              🏠 Dashboard
+              <LogOut className="w-4 h-4" />
+              Sign Out
             </button>
-            <button 
-              onClick={() => setCurrentPage('calendar')}
-              style={{
-                background: currentPage === 'calendar' ? 'rgba(255,255,255,0.2)' : 'none',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                padding: '8px 16px',
-                margin: '0 5px',
-                borderRadius: '20px',
-                cursor: 'pointer'
-              }}
-            >
-              📅 Calendar
-            </button>
-            <button 
-              onClick={() => setCurrentPage('login')}
-              style={{
-                background: currentPage === 'login' ? 'rgba(255,255,255,0.2)' : 'none',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                padding: '8px 16px',
-                margin: '0 5px',
-                borderRadius: '20px',
-                cursor: 'pointer'
-              }}
-            >
-              {user ? '👤 Account' : '🔑 Login'}
-            </button>
-            
-            {user && (
-              <img 
-                src={user.picture} 
-                alt="Profile" 
-                style={{ 
-                  width: '32px', 
-                  height: '32px', 
-                  borderRadius: '50%',
-                  marginLeft: '10px',
-                  border: '2px solid rgba(255,255,255,0.3)'
-                }}
-              />
-            )}
           </div>
-        </div>
-      </nav>
-      
+        )}
+      </aside>
+
       {/* Main Content */}
-      <div style={{ 
-        background: 'white', 
-        margin: '20px', 
-        borderRadius: '15px',
-        minHeight: 'calc(100vh - 100px)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-      }}>
-        {renderPage()}
-      </div>
-      
-      {/* Footer */}
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '20px',
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: '14px'
-      }}>
-        ProCalendar v2.1 - {user ? `${calendarEvents.length} real events synced 📊` : 'Backend waking up... 😴'} | Backend: {backendStatus}
-      </div>
+      <main className="lg:ml-64">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {user ? `Welcome back, ${user.name?.split(' ')[0]}` : 'Welcome to Slotify'}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <StatusBadge />
+              {user ? (
+                <button
+                  onClick={() => fetchCalendarEvents(user)}
+                  disabled={isLoadingEvents}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <RefreshCw className={`w-5 h-5 text-gray-500 ${isLoadingEvents ? 'animate-spin' : ''}`} />
+                </button>
+              ) : (
+                <button
+                  onClick={handleGoogleLogin}
+                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isLoadingAuth ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                  )}
+                  Connect Google
+                </button>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Dashboard Content */}
+        <div className="p-6">
+          {!user ? (
+            /* Not Logged In State */
+            <div className="max-w-2xl mx-auto text-center py-16">
+              <div className="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Calendar className="w-10 h-10 text-indigo-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Connect Your Calendar</h2>
+              <p className="text-gray-600 mb-8">
+                Sign in with Google to sync your calendar and start scheduling smarter.
+              </p>
+              <button
+                onClick={handleGoogleLogin}
+                disabled={backendStatus !== 'online' || isLoadingAuth}
+                className="inline-flex items-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              >
+                {isLoadingAuth ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                )}
+                Continue with Google
+              </button>
+            </div>
+          ) : (
+            /* Logged In State */
+            <div className="space-y-6">
+              {/* Stats Grid */}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Events', value: calendarEvents.length, icon: Calendar, color: 'bg-blue-500' },
+                  { label: 'Today', value: calendarEvents.filter(e => {
+                    const d = new Date(e.start?.dateTime || e.start?.date);
+                    const today = new Date();
+                    return d.toDateString() === today.toDateString();
+                  }).length, icon: Clock, color: 'bg-emerald-500' },
+                  { label: 'This Week', value: calendarEvents.filter(e => {
+                    const d = new Date(e.start?.dateTime || e.start?.date);
+                    const now = new Date();
+                    const weekEnd = new Date(now);
+                    weekEnd.setDate(now.getDate() + 7);
+                    return d >= now && d <= weekEnd;
+                  }).length, icon: CalendarDays, color: 'bg-purple-500' },
+                  { label: 'With Attendees', value: calendarEvents.filter(e => e.attendees?.length > 0).length, icon: Users, color: 'bg-orange-500' }
+                ].map((stat, i) => (
+                  <div key={i} className="bg-white rounded-xl p-6 border border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-500">{stat.label}</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                      </div>
+                      <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
+                        <stat.icon className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Upcoming Events */}
+              <div className="bg-white rounded-xl border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-gray-900">Upcoming Events</h2>
+                    <button
+                      onClick={() => setCurrentPage('calendar')}
+                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                    >
+                      View All
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {isLoadingEvents ? (
+                  <div className="p-12 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto" />
+                    <p className="text-gray-500 mt-4">Loading events...</p>
+                  </div>
+                ) : getUpcomingEvents().length === 0 ? (
+                  <div className="p-12 text-center">
+                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No upcoming events</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {getUpcomingEvents().map((event, i) => {
+                      const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
+
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => setSelectedEvent(event)}
+                          className="p-4 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-4"
+                        >
+                          <div className="w-14 text-center">
+                            <p className="text-xs text-gray-500 uppercase">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                            <p className="text-2xl font-bold text-gray-900">{start.getDate()}</p>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{event.summary || 'Untitled'}</p>
+                            <p className="text-sm text-gray-500">{formatEventTime(event)}</p>
+                          </div>
+                          {event.attendees?.length > 0 && (
+                            <div className="flex -space-x-2">
+                              {event.attendees.slice(0, 3).map((_, j) => (
+                                <div key={j} className="w-8 h-8 bg-gray-200 rounded-full border-2 border-white" />
+                              ))}
+                              {event.attendees.length > 3 && (
+                                <div className="w-8 h-8 bg-gray-100 rounded-full border-2 border-white flex items-center justify-center text-xs text-gray-500">
+                                  +{event.attendees.length - 3}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Event Modal */}
+      <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
+  );
+
+  // Loading State
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <CalendarDays className="w-8 h-8 text-white" />
+          </div>
+          <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white text-lg">Connecting to Google...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render appropriate page
+  return currentPage === 'dashboard' || currentPage === 'calendar' || currentPage === 'settings' ? (
+    <Dashboard />
+  ) : (
+    <LandingPage />
   );
 }
 
