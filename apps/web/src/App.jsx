@@ -11,7 +11,7 @@ function App() {
   const [debugInfo, setDebugInfo] = useState([]);
 
   // API configuration
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://procalender-backend.onrender.com';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || window.location.origin + '/auth/google/callback';
 
