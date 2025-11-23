@@ -73,6 +73,11 @@ export default defineConfig(({ mode }) => {
       open: false,
       host: true
     },
+    preview: {
+      host: true,
+      port: process.env.PORT || 4173,
+      allowedHosts: ['slotifyui.up.railway.app', '.railway.app']
+    },
     build: {
       outDir: 'dist',
       sourcemap: mode === 'development',
