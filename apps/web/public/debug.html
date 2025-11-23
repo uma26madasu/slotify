@@ -39,6 +39,9 @@
     <button onclick="window.location.reload()" style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Refresh Debug Info</button>
   </div>
 
+  <!-- Load environment variables -->
+  <script src="/env-config.js"></script>
+
   <script>
     // Show domain information
     document.getElementById('domain').textContent = window.location.hostname;
@@ -97,7 +100,7 @@
         <div class="error">
           <strong>⚠️ Missing Firebase API Key:</strong>
           <p>The Firebase API key is missing from environment variables.</p>
-          <p>Action: Check Vercel environment variables configuration.</p>
+          <p>Action: Check Railway environment variables configuration and redeploy.</p>
         </div>
       `;
     }
