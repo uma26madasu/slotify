@@ -322,7 +322,8 @@ const routeFiles = [
   { path: './routes/bookingRoutes', mount: '/api/bookings' },
   { path: './routes/approvalRoutes', mount: '/api/approvals' },
   { path: './routes/windows', mount: '/api/windows' },
-  { path: './routes/linkRoutes', mount: '/api/links' }
+  { path: './routes/linkRoutes', mount: '/api/links' },
+  { path: './routes/chainsyncRoutes', mount: '/api/chainsync' }
 ];
 
 routeFiles.forEach(({ path: routePath, mount }) => {
