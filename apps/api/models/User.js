@@ -38,15 +38,45 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false
   },
-  
+
   refreshToken: {
     type: String,
     required: false
   },
-  
+
   tokenExpiry: {
     type: Date,
     required: false
+  },
+
+  // Microsoft OAuth fields
+  microsoftId: {
+    type: String,
+    required: false,
+    unique: true,
+    sparse: true
+  },
+
+  microsoftAccessToken: {
+    type: String,
+    required: false
+  },
+
+  microsoftRefreshToken: {
+    type: String,
+    required: false
+  },
+
+  microsoftTokenExpiry: {
+    type: Number,
+    required: false
+  },
+
+  // Calendar provider preference
+  calendarProvider: {
+    type: String,
+    enum: ['google', 'microsoft', 'both'],
+    default: 'google'
   },
   
   // User preferences and settings
@@ -97,6 +127,8 @@ const userSchema = new mongoose.Schema({
       // Don't expose sensitive data in JSON responses
       delete ret.accessToken;
       delete ret.refreshToken;
+      delete ret.microsoftAccessToken;
+      delete ret.microsoftRefreshToken;
       delete ret.__v;
       return ret;
     }
