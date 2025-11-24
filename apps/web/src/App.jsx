@@ -145,10 +145,21 @@ function App() {
       }
 
       if (authSuccess && userData) {
-        setUser(userData);
-        localStorage.setItem('slotify_user', JSON.stringify(userData));
+        // Normalize user data structure - backend returns { user: {...}, tokens: {...} }
+        const normalizedUser = {
+          id: userData.user?.id || userData.id,
+          email: userData.user?.email || userData.email,
+          name: userData.user?.name || userData.name,
+          picture: userData.user?.picture || userData.picture,
+          accessToken: userData.tokens?.access_token || userData.accessToken,
+          refreshToken: userData.tokens?.refresh_token || userData.refreshToken,
+          tokenExpiry: userData.tokens?.expiry_date || userData.tokenExpiry
+        };
+
+        setUser(normalizedUser);
+        localStorage.setItem('slotify_user', JSON.stringify(normalizedUser));
         setCurrentPage('dashboard');
-        await fetchCalendarEvents(userData);
+        await fetchCalendarEvents(normalizedUser);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     } catch (error) {
@@ -162,11 +173,20 @@ function App() {
     setIsLoadingEvents(true);
 
     try {
+      // Get user email for the API request
+      const userEmail = getUserEmail(userData);
+      if (!userEmail) {
+        console.error('No user email available for calendar sync');
+        return;
+      }
+
       const calendarEndpoints = ['/api/calendar/events', '/calendar/events'];
 
       for (const endpoint of calendarEndpoints) {
         try {
-          const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          // Pass email as query parameter - backend looks up user by email
+          const url = `${API_BASE_URL}${endpoint}?email=${encodeURIComponent(userEmail)}`;
+          const response = await fetch(url, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${userData.accessToken || userData.token}`,
