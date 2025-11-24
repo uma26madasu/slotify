@@ -198,6 +198,24 @@ function App() {
     setCurrentPage('dashboard');
   };
 
+  // Helper to get user display name from various data structures
+  const getUserName = (userData) => {
+    if (!userData) return '';
+    return userData.name || userData.user?.name || userData.displayName || userData.user?.displayName || userData.email?.split('@')[0] || '';
+  };
+
+  // Helper to get user email
+  const getUserEmail = (userData) => {
+    if (!userData) return '';
+    return userData.email || userData.user?.email || '';
+  };
+
+  // Helper to get user picture
+  const getUserPicture = (userData) => {
+    if (!userData) return null;
+    return userData.picture || userData.user?.picture || userData.avatar || userData.user?.avatar || null;
+  };
+
   const formatEventTime = (event) => {
     const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
     const end = event.end?.dateTime ? new Date(event.end.dateTime) : new Date(event.end?.date);
@@ -554,7 +572,7 @@ function App() {
             {[
               { icon: Home, label: 'Dashboard', page: 'dashboard' },
               { icon: Calendar, label: 'Calendar', page: 'calendar' },
-              { icon: User, label: 'Account', page: 'login' },
+              { icon: User, label: 'Account', page: 'account' },
               { icon: Settings, label: 'Settings', page: 'settings' }
             ].map((item) => (
               <button
@@ -576,16 +594,16 @@ function App() {
         {user && (
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              {user.picture ? (
-                <img src={user.picture} alt="" className="w-10 h-10 rounded-full" />
+              {getUserPicture(user) ? (
+                <img src={getUserPicture(user)} alt="" className="w-10 h-10 rounded-full" />
               ) : (
                 <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-indigo-600" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{getUserName(user)}</p>
+                <p className="text-xs text-gray-500 truncate">{getUserEmail(user)}</p>
               </div>
             </div>
             <button
@@ -613,7 +631,7 @@ function App() {
               </button>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {user ? `Welcome back, ${user.name?.split(' ')[0]}` : 'Welcome to Slotify'}
+                  {user ? `Welcome back, ${getUserName(user).split(' ')[0]}` : 'Welcome to Slotify'}
                 </h1>
                 <p className="text-sm text-gray-500">
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -683,6 +701,66 @@ function App() {
                 )}
                 Continue with Google
               </button>
+            </div>
+          ) : currentPage === 'account' ? (
+            /* Account Page */
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                {/* Account Header */}
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-8">
+                  <div className="flex items-center gap-4">
+                    {getUserPicture(user) ? (
+                      <img src={getUserPicture(user)} alt="" className="w-20 h-20 rounded-full border-4 border-white/20" />
+                    ) : (
+                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
+                        <User className="w-10 h-10 text-white" />
+                      </div>
+                    )}
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">{getUserName(user)}</h2>
+                      <p className="text-indigo-100">{getUserEmail(user)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Details */}
+                <div className="p-6 space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span className="text-gray-600">Full Name</span>
+                        <span className="font-medium text-gray-900">{getUserName(user)}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span className="text-gray-600">Email</span>
+                        <span className="font-medium text-gray-900">{getUserEmail(user)}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                        <span className="text-gray-600">Connected Account</span>
+                        <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                          <CheckCircle className="w-4 h-4" />
+                          Google Calendar
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between py-3">
+                        <span className="text-gray-600">Total Events Synced</span>
+                        <span className="font-medium text-gray-900">{calendarEvents.length}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             /* Logged In State */
@@ -808,7 +886,7 @@ function App() {
   }
 
   // Render appropriate page
-  return currentPage === 'dashboard' || currentPage === 'calendar' || currentPage === 'settings' ? (
+  return currentPage === 'dashboard' || currentPage === 'calendar' || currentPage === 'settings' || currentPage === 'account' ? (
     <Dashboard />
   ) : (
     <LandingPage />
