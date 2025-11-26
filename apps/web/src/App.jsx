@@ -291,8 +291,13 @@ function App() {
   };
 
   const getUpcomingEvents = () => {
+    const now = new Date();
     return calendarEvents
-      .filter(event => new Date(event.start?.dateTime || event.start?.date) >= new Date())
+      .filter(event => {
+        const eventEnd = new Date(event.end?.dateTime || event.end?.date);
+        // Show events that haven't ended yet (includes ongoing and upcoming events)
+        return eventEnd >= now;
+      })
       .slice(0, 5);
   };
 
