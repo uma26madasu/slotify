@@ -1,7 +1,8 @@
 {
     "version": 2,
-    "buildCommand": "turbo run build --filter=web && mkdir -p public && cp -r apps/web/dist/* public/",
+    "buildCommand": "npm run vercel-build",
     "outputDirectory": "public",
+    "framework": null,
     "rewrites": [
         {
             "source": "/api/(.*)",
