@@ -1,18 +1,8 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "apps/web/package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "dist"
-            }
-        },
-        {
-            "src": "apps/api/server.js",
-            "use": "@vercel/node"
-        }
-    ],
+    "buildCommand": "turbo run build --force",
+    "outputDirectory": "apps/web/dist",
+    "framework": "vite",
     "rewrites": [
         {
             "source": "/api/(.*)",
@@ -20,7 +10,7 @@
         },
         {
             "source": "/(.*)",
-            "destination": "/apps/web/$1"
+            "destination": "/apps/web/dist/$1"
         }
     ]
 }
