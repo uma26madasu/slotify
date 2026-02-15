@@ -1,16 +1,5 @@
 {
-    "version": 2,
-    "buildCommand": "turbo run build --force",
-    "outputDirectory": "apps/web/dist",
-    "framework": "vite",
-    "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/apps/api/server.js"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/apps/web/dist/$1"
-        }
-    ]
+    "scripts": {
+        "build": "turbo run build --filter=web"
+    }
 }
