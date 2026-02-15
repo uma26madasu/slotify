@@ -4,6 +4,8 @@ const { google } = require('googleapis');
 const User = require('../models/User');
 const { refreshGoogleToken } = require('../utils/tokenManager');
 
+const { refreshMicrosoftToken } = require('../controllers/microsoftAuthController');
+
 // Create an axios instance with auth token handling
 const createAxiosWithAuth = (accessToken) => {
   return axios.create({
@@ -16,24 +18,84 @@ const createAxiosWithAuth = (accessToken) => {
 
 /**
  * Create a calendar event (supports both confirmed and tentative events)
+ * @param {String} userId - User ID
  * @param {String} calendarId - Calendar ID (typically 'primary')
  * @param {Object} eventData - Calendar event details
  * @param {Boolean} isTentative - Whether this is a tentative event
  */
 exports.createEvent = async (userId, calendarId, eventData, isTentative = false) => {
   try {
-    // Get user with Google tokens
     const user = await User.findById(userId);
-    if (!user || !user.googleTokens) {
+    if (!user) throw new Error('User not found');
+
+    // MICROSOFT FLOW
+    if (user.calendarProvider === 'microsoft') {
+      if (!user.microsoftAccessToken) throw new Error('Microsoft Calendar not connected');
+
+      // Refresh token if needed
+      const now = Date.now();
+      let accessToken = user.microsoftAccessToken;
+      if (user.microsoftTokenExpiry && now >= user.microsoftTokenExpiry - 60000) {
+        accessToken = await refreshMicrosoftToken(user);
+      }
+
+      const axiosWithAuth = createAxiosWithAuth(accessToken);
+
+      // Transform event to Microsoft format
+      const microsoftEvent = {
+        subject: eventData.summary,
+        body: {
+          contentType: 'HTML',
+          content: eventData.description || ''
+        },
+        start: {
+          dateTime: eventData.start.dateTime,
+          timeZone: eventData.start.timeZone
+        },
+        end: {
+          dateTime: eventData.end.dateTime,
+          timeZone: eventData.end.timeZone
+        },
+        location: {
+          displayName: eventData.location || ''
+        },
+        attendees: (eventData.attendees || []).map(a => ({
+          emailAddress: {
+            address: a.email,
+            name: a.email // Simple fallback
+          },
+          type: 'required'
+        })),
+        isOnlineMeeting: eventData.conferenceData ? true : false,
+        onlineMeetingProvider: eventData.conferenceData ? 'teamsForBusiness' : undefined
+      };
+
+      // Use checking/tentative status logic if needed, though MS uses 'showAs'
+      if (isTentative) {
+        microsoftEvent.showAs = 'tentative';
+      } else {
+        microsoftEvent.showAs = 'busy';
+      }
+
+      const url = calendarId === 'primary'
+        ? 'https://graph.microsoft.com/v1.0/me/calendar/events'
+        : `https://graph.microsoft.com/v1.0/me/calendars/${calendarId}/events`;
+
+      const response = await axiosWithAuth.post(url, microsoftEvent);
+      return { id: response.data.id, ...response.data };
+    }
+
+    // GOOGLE FLOW (Default)
+    if (!user.googleTokens) {
       throw new Error('Google Calendar not connected');
     }
-    
+
     // Check if token needs refresh
     const tokens = await refreshGoogleToken(user);
-    
+
     // Create authorized axios instance
     const axiosWithAuth = createAxiosWithAuth(tokens.access_token);
-    
+
     // If tentative, adjust the event properties
     if (isTentative) {
       eventData.status = 'tentative';
@@ -44,15 +106,15 @@ exports.createEvent = async (userId, calendarId, eventData, isTentative = false)
       eventData.transparency = 'opaque'; // Blocks time
       eventData.colorId = '1'; // Blue for confirmed
     }
-    
+
     const response = await axiosWithAuth.post(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
       eventData
     );
-    
+
     return response.data;
   } catch (error) {
-    console.error('Error creating calendar event:', error);
+    console.error('Error creating calendar event:', error?.response?.data || error);
     throw error;
   }
 };
@@ -70,13 +132,13 @@ exports.confirmEvent = async (userId, calendarId, eventId) => {
     if (!user || !user.googleTokens) {
       throw new Error('Google Calendar not connected');
     }
-    
+
     // Check if token needs refresh
     const tokens = await refreshGoogleToken(user);
-    
+
     // Create authorized axios instance
     const axiosWithAuth = createAxiosWithAuth(tokens.access_token);
-    
+
     const response = await axiosWithAuth.patch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
       {
@@ -85,7 +147,7 @@ exports.confirmEvent = async (userId, calendarId, eventId) => {
         colorId: '1' // Blue for confirmed
       }
     );
-    
+
     return response.data;
   } catch (error) {
     console.error('Error confirming event:', error);
@@ -106,17 +168,17 @@ exports.deleteEvent = async (userId, calendarId, eventId) => {
     if (!user || !user.googleTokens) {
       throw new Error('Google Calendar not connected');
     }
-    
+
     // Check if token needs refresh
     const tokens = await refreshGoogleToken(user);
-    
+
     // Create authorized axios instance
     const axiosWithAuth = createAxiosWithAuth(tokens.access_token);
-    
+
     const response = await axiosWithAuth.delete(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`
     );
-    
+
     return response.status === 204; // Returns true if successfully deleted
   } catch (error) {
     console.error('Error deleting event:', error);

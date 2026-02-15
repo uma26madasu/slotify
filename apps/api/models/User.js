@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true // Allows multiple null values
   },
-  
+
   // Basic user info
   email: {
     type: String,
@@ -21,18 +21,18 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
-  
+
   name: {
     type: String,
     required: true,
     trim: true
   },
-  
+
   picture: {
     type: String,
     required: false
   },
-  
+
   // Google Calendar OAuth tokens
   accessToken: {
     type: String,
@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
     enum: ['google', 'microsoft', 'both'],
     default: 'google'
   },
-  
+
   // User preferences and settings
   preferences: {
     timezone: {
@@ -94,36 +94,81 @@ const userSchema = new mongoose.Schema({
       default: 'primary'
     }
   },
-  
+
   // Account status
   isActive: {
     type: Boolean,
     default: true
   },
-  
+
   lastLogin: {
     type: Date,
     default: Date.now
   },
-  
+
   // Timestamps
   createdAt: {
     type: Date,
     default: Date.now
   },
-  
+
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+
+  // Security & 2FA
+  twoFactorSecret: {
+    type: String,
+    select: false // Hide by default
+  },
+  tempTwoFactorSecret: {
+    type: String,
+    select: false
+  },
+  isTwoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+  backupCodes: [{
+    type: String,
+    select: false
+  }],
+
+  // Compliance & Consent (GDPR/HIPAA)
+  consents: {
+    marketing: {
+      given: { type: Boolean, default: false },
+      timestamp: Date
+    },
+    dataProcessing: {
+      given: { type: Boolean, default: false },
+      timestamp: Date
+    },
+    hipaaAcknowledgment: {
+      given: { type: Boolean, default: false },
+      timestamp: Date
+    }
+  },
+
+  // Organization / Team Context
+  organizationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization'
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin', 'team_manager', 'compliance_officer'],
+    default: 'user'
   }
 }, {
   // Schema options
   timestamps: true, // Automatically manages createdAt and updatedAt
   strict: true, // Enforce schema structure
-  
+
   // Transform output
   toJSON: {
-    transform: function(doc, ret) {
+    transform: function (doc, ret) {
       // Don't expose sensitive data in JSON responses
       delete ret.accessToken;
       delete ret.refreshToken;
@@ -141,24 +186,24 @@ userSchema.index({ googleId: 1 });
 userSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to update the updatedAt field
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });
 
 // Instance methods
-userSchema.methods.updateLastLogin = function() {
+userSchema.methods.updateLastLogin = function () {
   this.lastLogin = new Date();
   return this.save();
 };
 
-userSchema.methods.hasValidTokens = function() {
+userSchema.methods.hasValidTokens = function () {
   if (!this.accessToken) return false;
   if (!this.tokenExpiry) return true; // Assume valid if no expiry set
   return new Date() < new Date(this.tokenExpiry);
 };
 
-userSchema.methods.clearTokens = function() {
+userSchema.methods.clearTokens = function () {
   this.accessToken = undefined;
   this.refreshToken = undefined;
   this.tokenExpiry = undefined;
@@ -166,15 +211,15 @@ userSchema.methods.clearTokens = function() {
 };
 
 // Static methods
-userSchema.statics.findByEmail = function(email) {
+userSchema.statics.findByEmail = function (email) {
   return this.findOne({ email: email.toLowerCase() });
 };
 
-userSchema.statics.findByGoogleId = function(googleId) {
+userSchema.statics.findByGoogleId = function (googleId) {
   return this.findOne({ googleId: googleId });
 };
 
-userSchema.statics.findActiveUsers = function() {
+userSchema.statics.findActiveUsers = function () {
   return this.find({ isActive: true });
 };
 

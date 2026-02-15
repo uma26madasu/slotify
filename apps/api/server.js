@@ -76,8 +76,8 @@ const corsOptions = {
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
+    'Content-Type',
+    'Authorization',
     'X-Requested-With',
     'Accept',
     'Origin',
@@ -107,12 +107,12 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin,X-CSRF-Token,Cache-Control,Pragma,Expires');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
-  
+
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
-  
+
   next();
 });
 
@@ -121,10 +121,10 @@ console.log('✅ CORS configuration applied');
 // HTTPS forcing middleware (for Render.com)
 app.use((req, res, next) => {
   // Check if request is secure (multiple methods for Render.com)
-  const isSecure = req.secure || 
-                   req.headers['x-forwarded-proto'] === 'https' ||
-                   req.headers['x-forwarded-ssl'] === 'on' ||
-                   req.connection.encrypted;
+  const isSecure = req.secure ||
+    req.headers['x-forwarded-proto'] === 'https' ||
+    req.headers['x-forwarded-ssl'] === 'on' ||
+    req.connection.encrypted;
 
   // Force HTTPS in production
   if (process.env.NODE_ENV === 'production' && !isSecure) {
@@ -138,7 +138,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
-  
+
   next();
 });
 
@@ -324,7 +324,9 @@ const routeFiles = [
   { path: './routes/windows', mount: '/api/windows' },
   { path: './routes/linkRoutes', mount: '/api/links' },
   { path: './routes/chainsyncRoutes', mount: '/api/chainsync' },
-  { path: './routes/microsoftRoutes', mount: '/api/microsoft' }
+  { path: './routes/microsoftRoutes', mount: '/api/microsoft' },
+  { path: './routes/securityRoutes', mount: '/api/security' },
+  { path: './routes/teamRoutes', mount: '/api/teams' }
 ];
 
 routeFiles.forEach(({ path: routePath, mount }) => {
@@ -343,7 +345,7 @@ routeFiles.forEach(({ path: routePath, mount }) => {
 // Global error handler
 app.use((error, req, res, next) => {
   console.error('❌ Global error handler:', error);
-  
+
   res.status(error.status || 500).json({
     success: false,
     message: error.message || 'Internal server error',
@@ -355,7 +357,7 @@ app.use((error, req, res, next) => {
 app.use('*', (req, res) => {
   // Get list of available routes
   const availableRoutes = [];
-  
+
   app._router.stack.forEach((middleware) => {
     if (middleware.route) {
       // Direct route
@@ -382,7 +384,7 @@ app.use('*', (req, res) => {
   });
 
   console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
-  
+
   res.status(404).json({
     success: false,
     message: `Route ${req.method} ${req.originalUrl} not found`,
@@ -390,15 +392,17 @@ app.use('*', (req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log('🚀 Server running on port', PORT);
-  console.log('🌐 Environment:', process.env.NODE_ENV || 'development');
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    console.log('🌐 API URL:', `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
-  }
-  console.log('✅ Slotify Backend is ready!');
-});
+// Start server only if run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log('🚀 Server running on port', PORT);
+    console.log('🌐 Environment:', process.env.NODE_ENV || 'development');
+    if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+      console.log('🌐 API URL:', `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+    }
+    console.log('✅ Slotify Backend is ready!');
+  });
+}
 
-// Export app for testing
+// Export app for testing and Vercel
 module.exports = app;
