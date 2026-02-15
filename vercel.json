@@ -1,8 +1,7 @@
 {
     "version": 2,
-    "buildCommand": "turbo run build --filter=web",
-    "outputDirectory": "apps/web/dist",
-    "framework": "vite",
+    "buildCommand": "turbo run build --filter=web && mkdir -p public && cp -r apps/web/dist/* public/",
+    "outputDirectory": "public",
     "rewrites": [
         {
             "source": "/api/(.*)",
