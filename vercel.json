@@ -1,8 +1,8 @@
 {
-    "buildCommand": "cd apps/web && npm run build && cd ../.. && mkdir -p public && cp -r apps/web/dist/. public/",
-    "outputDirectory": "public",
+    "buildCommand": "npm install --prefix apps/web && npm run build --prefix apps/web",
+    "outputDirectory": "apps/web/dist",
     "framework": null,
-    "installCommand": "npm install",
+    "installCommand": "echo 'Skipping root install'",
     "rewrites": [
         {
             "source": "/(.*)",
