@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Slotify - Intelligent Scheduling Platform with AI-powered contextual augmentation",
+  "packageManager": "npm@10.9.2",
   "workspaces": [
     "apps/*",
     "packages/*"
