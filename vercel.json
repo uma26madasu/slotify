@@ -1,4 +1,8 @@
 {
+    "buildCommand": "cd apps/web && npm run build && cd ../.. && mkdir -p public && cp -r apps/web/dist/. public/",
+    "outputDirectory": "public",
+    "framework": null,
+    "installCommand": "npm install",
     "rewrites": [
         {
             "source": "/(.*)",
