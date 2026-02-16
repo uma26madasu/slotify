@@ -2,13 +2,10 @@
     "buildCommand": "npm run vercel-build",
     "outputDirectory": "public",
     "installCommand": "npm install",
-    "routes": [
+    "rewrites": [
         {
-            "handle": "filesystem"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/index.html"
+            "source": "/(.*)",
+            "destination": "/"
         }
     ]
 }
