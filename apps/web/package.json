@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "vercel-build": "vite build && mkdir -p ../../public && cp -r dist/* ../../public/",
+    "vercel-build": "vite build",
     "lint": "eslint . --ext js,jsx --fix",
     "preview:production": "vite preview --mode production",
     "clean": "rm -rf dist node_modules .turbo"
