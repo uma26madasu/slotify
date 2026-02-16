@@ -4,3 +4,6 @@
 
 # Environment template
 .env.frontend.template
+
+# Ignore API - not deployed to Vercel
+apps/api
