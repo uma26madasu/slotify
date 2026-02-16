@@ -1,8 +1,4 @@
 {
-    "buildCommand": "cd ../../apps/web && npm install && npm run build && cd ../.. && cp -r apps/web/dist dist",
-    "outputDirectory": "dist",
-    "framework": null,
-    "installCommand": "echo 'Skipping root install'",
     "rewrites": [
         {
             "source": "/(.*)",
