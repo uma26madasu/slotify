@@ -1,6 +1,6 @@
 
     window.__ENV__ = {
-      // API URL - Update this with your Railway deployment URL
+      // API URL
       VITE_API_URL: 'https://slotify-production-1fd7.up.railway.app',
       
       // Firebase configuration
@@ -18,6 +18,6 @@
       
       // Version info (useful for debugging)
       VITE_APP_VERSION: '1.0.0',
-      VITE_APP_BUILD_DATE: '2025-11-08T22:43:55.985Z'
+      VITE_APP_BUILD_DATE: '2026-02-16T16:02:21.192Z'
     };
   
