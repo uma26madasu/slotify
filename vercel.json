@@ -1,6 +1,6 @@
 {
-    "buildCommand": "ls -la && ls -la apps/ && cd apps/web && npm run build",
-    "outputDirectory": "apps/web/dist",
+    "buildCommand": "npm run vercel-build",
+    "outputDirectory": "public",
     "framework": null,
     "installCommand": "npm install",
     "rewrites": [
