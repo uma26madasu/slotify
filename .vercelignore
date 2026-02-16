@@ -1,6 +1,3 @@
-# Vercel should ignore the API (deploy to Railway instead)
-apps/api
-
 # Build artifacts
 .turbo
 *.log
