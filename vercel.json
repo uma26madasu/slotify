@@ -1,9 +1,11 @@
 {
+    "$schema": "https://openapi.vercel.sh/vercel.json",
     "version": 2,
     "buildCommand": "npm run vercel-build",
     "outputDirectory": "public",
     "framework": null,
-    "installCommand": "npm install --prefix=.",
+    "installCommand": "npm install",
+    "ignoreCommand": "git diff --quiet HEAD^ HEAD ./apps/web",
     "rewrites": [
         {
             "source": "/(.*)",
