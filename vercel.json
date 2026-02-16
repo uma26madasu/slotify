@@ -1,25 +1,12 @@
 {
-    "version": 2,
-    "builds": [
+    "buildCommand": "cd apps/web && npm run build",
+    "outputDirectory": "apps/web/dist",
+    "installCommand": "npm install",
+    "framework": "vite",
+    "rewrites": [
         {
-            "src": "package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "public"
-            }
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/$1"
-        },
-        {
-            "handle": "filesystem"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/index.html"
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
