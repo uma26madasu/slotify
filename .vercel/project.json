@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build -w apps/web",
-  "outputDirectory": "apps/web/dist",
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "public",
   "installCommand": "npm install"
 }
