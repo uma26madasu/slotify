@@ -27,7 +27,7 @@ import {
 import SettingsPage from './pages/SettingsPage';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
   const [calendarEvents, setCalendarEvents] = useState([]);
@@ -261,7 +261,7 @@ function App() {
     setUser(null);
     setCalendarEvents([]);
     localStorage.removeItem('slotify_user');
-    setCurrentPage('dashboard');
+    setCurrentPage('home');
   };
 
   // Helper to get user display name from various data structures
