@@ -14,16 +14,16 @@
     "lint": "turbo run lint",
     "vercel-build": "turbo run build --filter=web --force && mkdir -p public && cp -r apps/web/dist/. public/",
     "clean": "turbo run clean && rm -rf node_modules",
-    "web:dev": "pnpm --filter web dev",
-    "api:dev": "pnpm --filter api dev",
-    "web:build": "pnpm --filter web build",
-    "api:build": "pnpm --filter api build"
+    "web:dev": "npm --workspace=apps/web run dev",
+    "api:dev": "npm --workspace=apps/api run dev",
+    "web:build": "npm --workspace=apps/web run build",
+    "api:build": "npm --workspace=apps/api run build"
   },
   "devDependencies": {
     "turbo": "^2.3.3"
   },
   "engines": {
-    "node": ">=18.0.0"
-  },
-  "packageManager": "pnpm@8.15.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
 }
