@@ -12,7 +12,7 @@
     "build": "turbo run build --force",
     "start": "node apps/api/server.js",
     "lint": "turbo run lint",
-    "vercel-build": "turbo run build --filter=web --force && mkdir -p public && cp -r apps/web/dist/. public/",
+    "vercel-build": "cd apps/web && npm run build && cd ../.. && mkdir -p public && cp -r apps/web/dist/. public/",
     "clean": "turbo run clean && rm -rf node_modules",
     "web:dev": "npm --workspace=apps/web run dev",
     "api:dev": "npm --workspace=apps/api run dev",
