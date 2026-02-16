@@ -1,18 +1,10 @@
 # Vercel should ignore the API (deploy to Railway instead)
 apps/api
 
-# Ignore shared packages from deployment
-packages/*
-
 # Build artifacts
 .turbo
-node_modules
 *.log
 
 # Environment files
 .env*
 !.env.example
-
-# Documentation
-*.md
-!README.md
