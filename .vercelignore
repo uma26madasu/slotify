@@ -2,6 +2,5 @@
 .turbo
 *.log
 
-# Environment files
-.env*
-!.env.example
+# Environment template
+.env.frontend.template
