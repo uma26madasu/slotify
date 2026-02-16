@@ -3,11 +3,8 @@
     "buildCommand": "npm run vercel-build",
     "outputDirectory": "public",
     "framework": null,
+    "installCommand": "npm install --prefix=.",
     "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/apps/api/server.js"
-        },
         {
             "source": "/(.*)",
             "destination": "/index.html"
