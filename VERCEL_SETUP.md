@@ -24,6 +24,7 @@ Set these in Vercel Dashboard → Settings → Environment Variables:
 2. Vercel runs `npm run vercel-build` which:
    - Uses Turbo to build only the web app: `turbo run build --filter=web --force`
    - Copies the built files from `apps/web/dist` to `public/`
+   - Creates a dummy `public/index.js` to satisfy Vercel's entrypoint check
 3. Vercel serves the `public/` directory
 
 ## Monorepo Structure
