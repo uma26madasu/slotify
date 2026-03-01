@@ -326,7 +326,10 @@ const routeFiles = [
   { path: './routes/chainsyncRoutes', mount: '/api/chainsync' },
   { path: './routes/microsoftRoutes', mount: '/api/microsoft' },
   { path: './routes/securityRoutes', mount: '/api/security' },
-  { path: './routes/teamRoutes', mount: '/api/teams' }
+  { path: './routes/teamRoutes', mount: '/api/teams' },
+  { path: './routes/zoomRoutes', mount: '/api/zoom' },
+  { path: './routes/slackRoutes', mount: '/api/slack' },
+  { path: './routes/teamsNotificationRoutes', mount: '/api/teams-notify' }
 ];
 
 routeFiles.forEach(({ path: routePath, mount }) => {
