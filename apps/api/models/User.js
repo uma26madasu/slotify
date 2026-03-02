@@ -151,6 +151,30 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // Phone number for SMS notifications
+  phoneNumber: {
+    type: String,
+    required: false,
+    trim: true
+  },
+
+  // Slack integration
+  slackIntegration: {
+    accessToken: { type: String, select: false },
+    teamId: String,
+    teamName: String,
+    webhookUrl: { type: String, select: false },
+    webhookChannel: String,
+    connectedAt: Date
+  },
+
+  // Microsoft Teams notification integration (webhook-based)
+  teamsIntegration: {
+    webhookUrl: { type: String, select: false },
+    channelName: String,
+    connectedAt: Date
+  },
+
   // Organization / Team Context
   organizationId: {
     type: mongoose.Schema.Types.ObjectId,

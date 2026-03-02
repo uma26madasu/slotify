@@ -1,5 +1,16 @@
 const nodemailer = require('nodemailer');
 const { User } = require('../models');
+const { sendBookingConfirmationSMS, sendBookingRejectionSMS } = require('./smsService');
+const {
+  notifyNewBooking: slackNewBooking,
+  notifyBookingConfirmed: slackConfirmed,
+  notifyBookingCancelled: slackCancelled
+} = require('./slackService');
+const {
+  notifyNewBooking: teamsNewBooking,
+  notifyBookingConfirmed: teamsConfirmed,
+  notifyBookingCancelled: teamsCancelled
+} = require('./teamsNotificationService');
 
 // Configure email transport (replace with your email service)
 const transporter = nodemailer.createTransport({
@@ -10,23 +21,39 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Fire-and-forget a non-critical side-channel notification.
+ * Errors are logged but never bubble up to callers.
+ */
+const trySend = async (label, fn) => {
+  try {
+    await fn();
+  } catch (err) {
+    console.warn(`⚠️ ${label} notification failed (non-fatal):`, err.message);
+  }
+};
+
+// ─── Approval Request ─────────────────────────────────────────────────────────
+
 exports.sendApprovalRequest = async (booking, approverIds) => {
   try {
     // Get approver details
     const approvers = await User.find({
       _id: { $in: approverIds }
-    }).select('name email');
-    
+    }).select('name email phoneNumber slackIntegration teamsIntegration');
+
     // Format date and time for email
     const bookingDate = new Date(booking.startTime).toLocaleDateString();
-    const bookingTime = new Date(booking.startTime).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const bookingTime = new Date(booking.startTime).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
-    
-    // Send email to each approver
+
     for (const approver of approvers) {
-      const mailOptions = {
+      // Email
+      await trySend('Email approval', () => transporter.sendMail({
         from: `"Slotify" <${process.env.EMAIL_USER}>`,
         to: approver.email,
         subject: `Booking Approval Required: ${booking.clientName}`,
@@ -43,29 +70,50 @@ exports.sendApprovalRequest = async (booking, approverIds) => {
             Review Booking
           </a>
         `
-      };
-      
-      await transporter.sendMail(mailOptions);
+      }));
+
+      // Slack (if approver has Slack connected)
+      if (approver.slackIntegration?.webhookUrl) {
+        await trySend('Slack approval', () =>
+          slackNewBooking(booking, null, approver.slackIntegration.webhookUrl)
+        );
+      }
+
+      // Teams (if approver has Teams webhook connected)
+      if (approver.teamsIntegration?.webhookUrl) {
+        await trySend('Teams approval', () =>
+          teamsNewBooking(booking, approver.teamsIntegration.webhookUrl)
+        );
+      }
     }
-    
+
+    // Global Slack / Teams webhook (org-level)
+    if (process.env.SLACK_WEBHOOK_URL) {
+      await trySend('Global Slack approval', () => slackNewBooking(booking));
+    }
+    if (process.env.TEAMS_WEBHOOK_URL) {
+      await trySend('Global Teams approval', () => teamsNewBooking(booking));
+    }
+
     return true;
   } catch (error) {
-    console.error('Error sending approval request emails:', error);
+    console.error('Error sending approval request notifications:', error);
     throw error;
   }
 };
 
+// ─── Approval Confirmation ────────────────────────────────────────────────────
+
 exports.sendApprovalConfirmation = async (booking) => {
   try {
-    // Format date and time for email
     const bookingDate = new Date(booking.startTime).toLocaleDateString();
-    const bookingTime = new Date(booking.startTime).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const bookingTime = new Date(booking.startTime).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
-    
-    // Prepare email to client
-    const mailOptions = {
+
+    // Email to client
+    await trySend('Email confirmation', () => transporter.sendMail({
       from: `"Slotify" <${process.env.EMAIL_USER}>`,
       to: booking.clientEmail,
       subject: 'Your booking has been approved!',
@@ -75,32 +123,47 @@ exports.sendApprovalConfirmation = async (booking) => {
         <ul>
           <li><strong>Date:</strong> ${bookingDate}</li>
           <li><strong>Time:</strong> ${bookingTime}</li>
+          ${booking.videoLink ? `<li><strong>Video Link:</strong> <a href="${booking.videoLink}">${booking.videoLink}</a></li>` : ''}
         </ul>
         <p>We look forward to meeting with you!</p>
         <p>If you need to cancel or reschedule, please use the link in your original booking confirmation.</p>
       `
-    };
-    
-    await transporter.sendMail(mailOptions);
-    
+    }));
+
+    // SMS to client (if phone number is in the booking)
+    if (booking.clientPhone) {
+      await trySend('SMS confirmation', () =>
+        sendBookingConfirmationSMS(booking.clientPhone, booking)
+      );
+    }
+
+    // Global Slack / Teams channels
+    if (process.env.SLACK_WEBHOOK_URL) {
+      await trySend('Slack confirmation', () => slackConfirmed(booking));
+    }
+    if (process.env.TEAMS_WEBHOOK_URL) {
+      await trySend('Teams confirmation', () => teamsConfirmed(booking));
+    }
+
     return true;
   } catch (error) {
-    console.error('Error sending approval confirmation email:', error);
+    console.error('Error sending approval confirmation notifications:', error);
     throw error;
   }
 };
 
+// ─── Rejection Notification ───────────────────────────────────────────────────
+
 exports.sendRejectionNotification = async (booking, reason) => {
   try {
-    // Format date and time for email
     const bookingDate = new Date(booking.startTime).toLocaleDateString();
-    const bookingTime = new Date(booking.startTime).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const bookingTime = new Date(booking.startTime).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
-    
-    // Prepare email to client
-    const mailOptions = {
+
+    // Email to client
+    await trySend('Email rejection', () => transporter.sendMail({
       from: `"Slotify" <${process.env.EMAIL_USER}>`,
       to: booking.clientEmail,
       subject: 'Update on your booking request',
@@ -117,13 +180,26 @@ exports.sendRejectionNotification = async (booking, reason) => {
           Book Another Time
         </a>
       `
-    };
-    
-    await transporter.sendMail(mailOptions);
-    
+    }));
+
+    // SMS to client (if phone number available)
+    if (booking.clientPhone) {
+      await trySend('SMS rejection', () =>
+        sendBookingRejectionSMS(booking.clientPhone, booking, reason)
+      );
+    }
+
+    // Global Slack / Teams channels
+    if (process.env.SLACK_WEBHOOK_URL) {
+      await trySend('Slack rejection', () => slackCancelled(booking, reason));
+    }
+    if (process.env.TEAMS_WEBHOOK_URL) {
+      await trySend('Teams rejection', () => teamsCancelled(booking, reason));
+    }
+
     return true;
   } catch (error) {
-    console.error('Error sending rejection email:', error);
+    console.error('Error sending rejection notifications:', error);
     throw error;
   }
 };
