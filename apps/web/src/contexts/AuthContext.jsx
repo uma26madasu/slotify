@@ -33,8 +33,9 @@ export const AuthProvider = ({ children }) => {
         setUser({ email, userId });
         
         // Check Google Calendar connection status
+        const API_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
         const response = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/auth/google/status?email=${encodeURIComponent(email)}`
+          `${API_URL}/api/auth/google/status?email=${encodeURIComponent(email)}`
         );
         
         setIsGoogleConnected(response.data.connected);
@@ -51,8 +52,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       // This is a placeholder - implement your actual login logic
+      const API_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
       const response = await axios.post(
-        `${process.env.REACT_APP_API_BASE_URL}/api/auth/login`,
+        `${API_URL}/api/auth/login`,
         { email, password }
       );
 
@@ -75,8 +77,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const loginWithGoogle = () => {
-    // Redirect to backend Google OAuth URL
-    window.location.href = `${process.env.REACT_APP_API_BASE_URL}/api/auth/google/url`;
+    const API_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
+    window.location.href = `${API_URL}/api/auth/google/url`;
   };
 
   const logout = () => {
