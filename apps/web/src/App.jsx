@@ -451,7 +451,7 @@ function App() {
               ) : (
                 <button
                   onClick={handleGoogleLogin}
-                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  disabled={isLoadingAuth}
                   className="px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isLoadingAuth ? (
@@ -490,7 +490,7 @@ function App() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button
                   onClick={handleGoogleLogin}
-                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  disabled={isLoadingAuth}
                   className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   {isLoadingAuth ? (
@@ -513,7 +513,7 @@ function App() {
 
                 <button
                   onClick={handleMicrosoftLogin}
-                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  disabled={isLoadingAuth}
                   className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   {isLoadingAuth ? (
@@ -618,7 +618,7 @@ function App() {
           </p>
           <button
             onClick={handleGoogleLogin}
-            disabled={backendStatus !== 'online' || isLoadingAuth}
+            disabled={isLoadingAuth}
             className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors shadow-lg disabled:opacity-50"
           >
             Start Scheduling for Free
@@ -743,7 +743,7 @@ function App() {
               ) : (
                 <button
                   onClick={handleGoogleLogin}
-                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  disabled={isLoadingAuth}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   {isLoadingAuth ? (
@@ -778,7 +778,7 @@ function App() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button
                   onClick={handleGoogleLogin}
-                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  disabled={isLoadingAuth}
                   className="inline-flex items-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
                 >
                   {isLoadingAuth ? (
@@ -795,7 +795,7 @@ function App() {
                 </button>
                 <button
                   onClick={handleMicrosoftLogin}
-                  disabled={backendStatus !== 'online' || isLoadingAuth}
+                  disabled={isLoadingAuth}
                   className="inline-flex items-center gap-3 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
                   {isLoadingAuth ? (

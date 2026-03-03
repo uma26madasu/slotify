@@ -31,15 +31,15 @@ console.log('📝 Auth controller configuration loaded');
 console.log('🔗 Frontend Redirect URI:', FRONTEND_REDIRECT_URI);
 
 // Helper function to create OAuth2 client
-const createOAuth2Client = () => {
+const createOAuth2Client = (redirectUri) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     throw new Error('Missing Google OAuth credentials in environment variables');
   }
-  
+
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    FRONTEND_REDIRECT_URI
+    redirectUri || FRONTEND_REDIRECT_URI
   );
 };
 
@@ -47,8 +47,10 @@ const createOAuth2Client = () => {
 async function getGoogleOAuthUrl(req, res) {
   try {
     console.log('🔄 Generating Google OAuth URL...');
-    
-    const oauth2Client = createOAuth2Client();
+
+    // Allow the frontend to specify its own redirect_uri so the token exchange always matches
+    const redirectUri = req.query.redirect_uri || req.body?.redirect_uri || FRONTEND_REDIRECT_URI;
+    const oauth2Client = createOAuth2Client(redirectUri);
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
@@ -56,12 +58,12 @@ async function getGoogleOAuthUrl(req, res) {
     });
 
     console.log('✅ OAuth URL generated successfully');
-    
+
     res.json({
       success: true,
       url: authUrl,
       debug: {
-        redirectUri: FRONTEND_REDIRECT_URI,
+        redirectUri,
         scopes: SCOPES,
         timestamp: new Date().toISOString()
       }
@@ -84,8 +86,8 @@ async function handleGoogleCallback(req, res) {
     console.log('   Method:', req.method);
     console.log('   Body keys:', Object.keys(req.body || {}));
 
-    const { code } = req.body;
-    
+    const { code, redirect_uri } = req.body;
+
     if (!code) {
       console.error('❌ No authorization code provided');
       return res.status(400).json({
@@ -95,8 +97,9 @@ async function handleGoogleCallback(req, res) {
     }
 
     console.log('🔄 Exchanging code for tokens...');
-    
-    const oauth2Client = createOAuth2Client();
+    console.log('🔗 Using redirect_uri:', redirect_uri || FRONTEND_REDIRECT_URI);
+
+    const oauth2Client = createOAuth2Client(redirect_uri);
     const { tokens } = await oauth2Client.getToken(code);
     
     console.log('✅ Token exchange successful');
