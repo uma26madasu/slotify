@@ -73,7 +73,15 @@ if (process.env.RAILWAY_STATIC_URL) {
 }
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (e.g. curl, mobile apps)
+    if (!origin) return callback(null, true);
+    // Allow any *.vercel.app subdomain or explicitly listed origin
+    if (allowedOrigins.includes(origin) || /^https:\/\/[^.]+\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
     'Content-Type',
@@ -100,7 +108,7 @@ app.options('*', cors(corsOptions));
 // Additional CORS headers for edge cases
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (corsOptions.origin.includes(origin)) {
+  if (origin && (allowedOrigins.includes(origin) || /^https:\/\/[^.]+\.vercel\.app$/.test(origin))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
