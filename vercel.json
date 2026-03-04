@@ -1,6 +1,6 @@
 {
     "buildCommand": "npm run vercel-build",
-    "outputDirectory": "apps/web/dist",
+    "outputDirectory": "dist",
     "installCommand": "npm install --include=dev",
     "framework": null,
     "rewrites": [
