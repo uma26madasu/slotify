@@ -104,7 +104,7 @@ function App() {
 
   const handleGoogleLogin = () => {
     if (!GOOGLE_CLIENT_ID) {
-      alert('Google Client ID not configured. Please check your environment variables.');
+      setAuthError('Google Client ID is not configured. Add VITE_GOOGLE_CLIENT_ID to your Vercel environment variables, then redeploy.');
       return;
     }
 
@@ -131,7 +131,7 @@ function App() {
 
   const handleMicrosoftLogin = () => {
     if (!MICROSOFT_CLIENT_ID) {
-      alert('Microsoft Client ID not configured. Please check your environment variables.');
+      setAuthError('Microsoft Client ID is not configured. Add VITE_MICROSOFT_CLIENT_ID to your Vercel environment variables, then redeploy.');
       return;
     }
 
