@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "buildCommand": "echo 'API ready - no build step needed'",
+  "outputDirectory": ".",
+  "installCommand": "npm install",
   "builds": [
     {
       "src": "server.js",
