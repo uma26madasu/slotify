@@ -30,6 +30,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+  const [authError, setAuthError] = useState(null);
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -40,7 +41,7 @@ function App() {
   const API_BASE_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const MICROSOFT_CLIENT_ID = import.meta.env.VITE_MICROSOFT_CLIENT_ID;
-  const REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || window.location.origin + '/auth/google/callback';
+  const REDIRECT_URI = window.location.origin + '/auth/google/callback';
   const MICROSOFT_REDIRECT_URI = window.location.origin + '/auth/microsoft/callback';
 
   // Wake up backend on component mount
@@ -52,9 +53,13 @@ function App() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const errorParam = urlParams.get('error');
     const path = window.location.pathname;
 
-    if (code) {
+    if (errorParam) {
+      setAuthError(`Google sign-in was denied: ${errorParam}`);
+      window.history.replaceState({}, document.title, '/');
+    } else if (code) {
       // Detect which provider based on callback path
       const isMicrosoft = path.includes('/auth/microsoft/callback');
       handleAuthCallback(code, isMicrosoft ? 'microsoft' : 'google');
@@ -199,13 +204,18 @@ function App() {
         };
 
         setUser(normalizedUser);
+        setAuthError(null);
         localStorage.setItem('slotify_user', JSON.stringify(normalizedUser));
         setCurrentPage('dashboard');
         await fetchCalendarEvents(normalizedUser);
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState({}, document.title, '/');
+      } else {
+        setAuthError('Sign-in failed. Please try again.');
+        window.history.replaceState({}, document.title, '/');
       }
     } catch (error) {
-      alert(`Authentication failed: ${error.message}`);
+      setAuthError(`Authentication failed: ${error.message}`);
+      window.history.replaceState({}, document.title, '/');
     } finally {
       setIsLoadingAuth(false);
     }
@@ -471,10 +481,22 @@ function App() {
         {/* Hero Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-indigo-300 text-sm mb-8">
-              <Sparkles className="w-4 h-4" />
-              Smart Scheduling Made Simple
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-indigo-300 text-sm">
+                <Sparkles className="w-4 h-4" />
+                Smart Scheduling Made Simple
+              </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 backdrop-blur-sm border border-indigo-400/30 rounded-full text-indigo-200 text-sm">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                Powered by ChainSync Orchestration
+              </div>
             </div>
+            {authError && (
+              <div className="mb-6 mx-auto max-w-md px-4 py-3 bg-red-500/20 border border-red-400/40 rounded-xl text-red-200 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {authError}
+              </div>
+            )}
 
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
               Schedule meetings
@@ -532,13 +554,6 @@ function App() {
                 </button>
               </div>
 
-              <button
-                onClick={() => setCurrentPage('dashboard')}
-                className="w-full sm:w-auto px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold text-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
-              >
-                View Demo
-                <ArrowRight className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>
@@ -655,7 +670,10 @@ function App() {
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
               <CalendarDays className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Slotify</span>
+            <div>
+              <span className="text-xl font-bold text-gray-900">Slotify</span>
+              <p className="text-xs text-indigo-500 font-medium">via ChainSync</p>
+            </div>
           </div>
         </div>
 
@@ -913,6 +931,38 @@ function App() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* ChainSync Orchestration Panel */}
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-yellow-300" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">ChainSync Orchestration</h3>
+                      <p className="text-indigo-200 text-sm">Slotify is your scheduling layer</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-400/20 border border-green-400/30 rounded-full">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span className="text-green-300 text-xs font-medium">Active</span>
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-4">
+                  {[
+                    { label: 'Alert Meetings', icon: AlertCircle, desc: 'Auto-scheduled from alerts' },
+                    { label: 'Authorities', icon: Users, desc: 'Response coordinators' },
+                    { label: 'Integrations', icon: Globe, desc: 'Google · Slack · Zoom' }
+                  ].map((item, i) => (
+                    <div key={i} className="bg-white/10 rounded-lg p-3">
+                      <item.icon className="w-5 h-5 text-indigo-200 mb-1" />
+                      <p className="text-white text-sm font-medium">{item.label}</p>
+                      <p className="text-indigo-300 text-xs">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Upcoming Events */}
