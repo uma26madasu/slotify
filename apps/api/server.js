@@ -177,8 +177,9 @@ const connectDB = async () => {
     });
     console.log('✅ Connected to MongoDB successfully with Mongoose!');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    process.exit(1);
+    console.error('❌ MongoDB connection error:', error.message);
+    console.error('⚠️  App will continue without DB - check MongoDB Atlas IP whitelist allows 0.0.0.0/0');
+    // Do NOT process.exit(1) - let the app run so health checks and other routes still work
   }
 };
 
