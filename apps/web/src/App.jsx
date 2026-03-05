@@ -84,10 +84,9 @@ function App() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      const response = await fetch(`${API_BASE_URL}/`, {
+      const response = await fetch(`${API_BASE_URL}/api/test`, {
         method: 'GET',
         signal: controller.signal,
-        headers: { 'Cache-Control': 'no-cache' }
       });
 
       clearTimeout(timeoutId);
@@ -96,9 +95,11 @@ function App() {
         setBackendStatus('online');
       } else {
         setBackendStatus('error');
+        console.error(`Backend returned ${response.status} at ${API_BASE_URL}/api/test`);
       }
     } catch (error) {
       setBackendStatus('error');
+      console.error(`Backend unreachable at ${API_BASE_URL}/api/test:`, error.message);
     }
   };
 
@@ -318,11 +319,26 @@ function App() {
       checking: { color: 'bg-yellow-100 text-yellow-800', icon: Loader2, text: 'Connecting...', animate: true },
       waking: { color: 'bg-blue-100 text-blue-800', icon: Loader2, text: 'Starting...', animate: true },
       online: { color: 'bg-green-100 text-green-800', icon: CheckCircle, text: 'Online', animate: false },
-      error: { color: 'bg-red-100 text-red-800', icon: AlertCircle, text: 'Offline', animate: false }
+      error: { color: 'bg-red-100 text-red-800', icon: AlertCircle, text: 'Backend Offline', animate: false }
     };
 
     const config = statusConfig[backendStatus];
     const Icon = config.icon;
+
+    if (backendStatus === 'error') {
+      return (
+        <a
+          href={`${API_BASE_URL}/api/test`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Click to test: ${API_BASE_URL}/api/test`}
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${config.color} hover:opacity-80`}
+        >
+          <Icon className="w-3.5 h-3.5" />
+          {config.text} ↗
+        </a>
+      );
+    }
 
     return (
       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
