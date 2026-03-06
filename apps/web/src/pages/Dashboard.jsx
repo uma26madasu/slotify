@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 import googleCalendarService from '../services/calendar/googleCalendar';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app';
+
 const Dashboard = () => {
   const { currentUser } = useAuth();
   const location = useLocation();
@@ -88,7 +90,7 @@ const Dashboard = () => {
         setConnectedEmail(storedEmail);
         
         // Verify connection with backend
-        const response = await fetch(`https://slotify-production-1fd7.up.railway.app/api/auth/google/status?email=${encodeURIComponent(storedEmail)}`);
+        const response = await fetch(`${API_BASE_URL}/api/auth/google/status?email=${encodeURIComponent(storedEmail)}`);
         const data = await response.json();
         
         if (data.connected) {
@@ -138,7 +140,7 @@ const Dashboard = () => {
       end.setFullYear(end.getFullYear() + 1);
 
       // Try direct API call first
-      const response = await fetch(`https://slotify-production-1fd7.up.railway.app/api/calendar/events?email=${encodeURIComponent(email)}&startDate=${start.toISOString()}&endDate=${end.toISOString()}&maxResults=100`, {
+      const response = await fetch(`${API_BASE_URL}/api/calendar/events?email=${encodeURIComponent(email)}&startDate=${start.toISOString()}&endDate=${end.toISOString()}&maxResults=100`, {
         headers: {
           'Authorization': `Bearer ${email}`,
           'Content-Type': 'application/json'
@@ -269,7 +271,7 @@ const Dashboard = () => {
       }
       
       // Direct backend call
-      const response = await fetch('https://slotify-production-1fd7.up.railway.app/api/auth/google/url', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/google/url`, {
         method: 'GET',
         headers: authHeaders,
         credentials: 'include'
@@ -305,7 +307,7 @@ const Dashboard = () => {
       // Also try direct API call if we have email
       if (connectedEmail) {
         try {
-          await fetch(`https://slotify-production-1fd7.up.railway.app/api/auth/google/disconnect?email=${encodeURIComponent(connectedEmail)}`, {
+          await fetch(`${API_BASE_URL}/api/auth/google/disconnect?email=${encodeURIComponent(connectedEmail)}`, {
             method: 'POST'
           });
         } catch (error) {
@@ -364,12 +366,12 @@ const Dashboard = () => {
         console.log(`🧪 Testing connection for: ${email}`);
         
         // Test auth status
-        const authResponse = await fetch(`https://slotify-production-1fd7.up.railway.app/api/auth/google/status?email=${encodeURIComponent(email)}`);
+        const authResponse = await fetch(`${API_BASE_URL}/api/auth/google/status?email=${encodeURIComponent(email)}`);
         const authData = await authResponse.json();
         console.log('🔐 Auth Status:', authData);
         
         // Test events fetch
-        const eventsResponse = await fetch(`https://slotify-production-1fd7.up.railway.app/api/calendar/events?email=${encodeURIComponent(email)}`, {
+        const eventsResponse = await fetch(`${API_BASE_URL}/api/calendar/events?email=${encodeURIComponent(email)}`, {
           headers: {
             'Authorization': `Bearer ${email}`,
             'Content-Type': 'application/json'

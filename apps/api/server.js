@@ -24,10 +24,10 @@ const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingEnvVars.length > 0) {
   console.error('❌ Missing required environment variables:', missingEnvVars.join(', '));
-  console.error('Please set these environment variables in Railway dashboard');
+  console.error('Please set these environment variables in your deployment dashboard');
   console.error('Current NODE_ENV:', process.env.NODE_ENV);
   console.error('Total env vars available:', Object.keys(process.env).length);
-  process.exit(1);
+  // Do NOT process.exit(1) in serverless - log and continue, requests will fail gracefully
 }
 
 console.log('✅ All required environment variables are set');
