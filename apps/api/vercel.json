@@ -1,16 +1,8 @@
 {
   "version": 2,
-  "installCommand": "npm install",
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "server.js"
-    }
+  "buildCommand": "echo done",
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
   ]
 }
