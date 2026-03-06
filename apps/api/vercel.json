@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "mkdir -p public",
+  "buildCommand": "mkdir -p public && echo '{\"status\":\"ok\"}' > public/index.json",
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
