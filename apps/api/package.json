@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "mkdir -p public && echo '{\"status\":\"ok\"}' > public/index.json",
-    "vercel-build": "echo 'API ready for Vercel serverless deployment'",
+    "vercel-build": "mkdir -p ../../.vercel/output/static ../../.vercel/output/functions/index.func && echo '{\"version\":3,\"routes\":[{\"src\":\"/(.*)\",\"dest\":\"/index\"}]}' > ../../.vercel/output/config.json && echo '{\"status\":\"ok\"}' > ../../.vercel/output/static/index.json && echo '{\"runtime\":\"nodejs18.x\",\"handler\":\"index.js\",\"launcherType\":\"Nodejs\"}' > ../../.vercel/output/functions/index.func/.vc-config.json && cp server.js package.json ../../.vercel/output/functions/index.func/ && cp -r routes controllers middleware models services utils ../../.vercel/output/functions/index.func/ 2>/dev/null || true && cp Link.js User.js Window.js ../../.vercel/output/functions/index.func/ 2>/dev/null || true && cp -r node_modules ../../.vercel/output/functions/index.func/ && echo 'module.exports=require(\"./server.js\");' > ../../.vercel/output/functions/index.func/index.js",
     "lint": "echo 'Add ESLint configuration later'",
     "clean": "rm -rf node_modules .turbo"
   },
