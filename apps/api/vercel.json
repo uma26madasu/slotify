@@ -1,5 +1,5 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "node build.js"
+  "buildCommand": "npm run vercel-build"
 }
