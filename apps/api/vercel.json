@@ -1,5 +1,5 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "mkdir -p .vercel/output/static .vercel/output/functions/index.func && node -e \"const fs=require('fs');fs.writeFileSync('.vercel/output/config.json',JSON.stringify({version:3,routes:[{src:'/(.*)',dest:'/index'}]}));fs.writeFileSync('.vercel/output/static/index.json',JSON.stringify({status:'ok'}));fs.writeFileSync('.vercel/output/functions/index.func/.vc-config.json',JSON.stringify({runtime:'nodejs18.x',handler:'index.js',launcherType:'Nodejs'}));\" && cp server.js package.json package-lock.json .vercel/output/functions/index.func/ && for d in routes controllers middleware models services utils; do [ -d \"$d\" ] && cp -r \"$d\" .vercel/output/functions/index.func/ || true; done && for f in Link.js User.js Window.js; do [ -f \"$f\" ] && cp \"$f\" .vercel/output/functions/index.func/ || true; done && cd .vercel/output/functions/index.func && npm install --omit=dev --no-audit --no-fund && cd - && echo 'module.exports=require(\"./server.js\");' > .vercel/output/functions/index.func/index.js && echo 'Vercel build complete'"
+  "buildCommand": "node build.js"
 }
