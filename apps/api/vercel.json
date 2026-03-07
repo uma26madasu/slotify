@@ -1,5 +1,5 @@
 {
   "version": 2,
   "installCommand": "npm install",
-  "buildCommand": "npm run vercel-build -w api"
+  "buildCommand": "npm run vercel-build"
 }
