@@ -25,6 +25,8 @@ import {
   User
 } from 'lucide-react';
 import SettingsPage from './pages/SettingsPage';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from './firebase/config';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -103,31 +105,45 @@ function App() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    if (!GOOGLE_CLIENT_ID) {
-      setAuthError('Google Client ID is not configured. Add VITE_GOOGLE_CLIENT_ID to your Vercel environment variables, then redeploy.');
-      return;
-    }
-
+  const handleGoogleLogin = async () => {
+    if (isLoadingAuth) return;
     setIsLoadingAuth(true);
+    setAuthError(null);
 
-    const scope = [
-      'openid',
-      'profile',
-      'email',
-      'https://www.googleapis.com/auth/calendar.readonly',
-      'https://www.googleapis.com/auth/calendar.events.readonly'
-    ].join(' ');
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
+      provider.addScope('https://www.googleapis.com/auth/calendar.events.readonly');
 
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${GOOGLE_CLIENT_ID}&` +
-      `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
-      `response_type=code&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `access_type=offline&` +
-      `prompt=consent`;
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
 
-    window.location.href = authUrl;
+      const normalizedUser = {
+        id: result.user.uid,
+        email: result.user.email,
+        name: result.user.displayName,
+        picture: result.user.photoURL,
+        accessToken: credential.accessToken,
+        calendarProvider: 'google'
+      };
+
+      setUser(normalizedUser);
+      setAuthError(null);
+      localStorage.setItem('slotify_user', JSON.stringify(normalizedUser));
+      setCurrentPage('dashboard');
+      await fetchCalendarEvents(normalizedUser);
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        setAuthError('Sign-in cancelled. Please try again.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setAuthError('This domain is not authorized in Firebase. Add it to Firebase Console → Authentication → Settings → Authorized domains.');
+      } else {
+        setAuthError(error.message || 'Sign-in failed. Please try again.');
+      }
+    } finally {
+      setIsLoadingAuth(false);
+    }
   };
 
   const handleMicrosoftLogin = () => {
@@ -239,6 +255,7 @@ function App() {
         ? ['/api/microsoft/calendar/events']
         : ['/api/calendar/events', '/calendar/events'];
 
+      let backendSuccess = false;
       for (const endpoint of calendarEndpoints) {
         try {
           // Pass email as query parameter - backend looks up user by email
@@ -255,10 +272,28 @@ function App() {
           if (response.ok) {
             const data = await response.json();
             setCalendarEvents(data.events || data.items || data || []);
+            backendSuccess = true;
             break;
           }
         } catch (e) {
           continue;
+        }
+      }
+
+      // If backend failed and we have a Google access token, call Google Calendar API directly
+      if (!backendSuccess && provider === 'google' && userData.accessToken) {
+        try {
+          const now = new Date().toISOString();
+          const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=50&timeMin=${now}&singleEvents=true&orderBy=startTime`;
+          const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${userData.accessToken}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setCalendarEvents(data.items || []);
+          }
+        } catch (e) {
+          console.error('Direct Google Calendar API failed:', e);
         }
       }
     } catch (error) {
