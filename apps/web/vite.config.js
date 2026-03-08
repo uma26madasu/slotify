@@ -13,13 +13,13 @@ function createEnvConfigFile(env) {
       VITE_API_URL: '${env.VITE_API_URL || 'https://slotify-production-1fd7.up.railway.app'}',
       
       // Firebase configuration
-      VITE_FIREBASE_API_KEY: '${env.VITE_FIREBASE_API_KEY || 'AIzaSyCYsr6oZ3j-R7nJe6xWaRO6Q5xi0Rk3IV8'}',
-      VITE_FIREBASE_AUTH_DOMAIN: '${env.VITE_FIREBASE_AUTH_DOMAIN || 'procalenderfrontend.firebaseapp.com'}',
-      VITE_FIREBASE_PROJECT_ID: '${env.VITE_FIREBASE_PROJECT_ID || 'procalenderfrontend'}',
-      VITE_FIREBASE_STORAGE_BUCKET: '${env.VITE_FIREBASE_STORAGE_BUCKET || 'procalenderfrontend.firebasestorage.app'}',
-      VITE_FIREBASE_MESSAGING_SENDER_ID: '${env.VITE_FIREBASE_MESSAGING_SENDER_ID || '302768668350'}',
-      VITE_FIREBASE_APP_ID: '${env.VITE_FIREBASE_APP_ID || '1:302768668350:web:b92f80489662289e28e8ef'}',
-      VITE_FIREBASE_MEASUREMENT_ID: '${env.VITE_FIREBASE_MEASUREMENT_ID || 'G-QJWKGJN76S'}',
+      VITE_FIREBASE_API_KEY: '${env.VITE_FIREBASE_API_KEY || 'AIzaSyBUw9tJeZp3K99rlpcrRrOIJAybcCAWYNM'}',
+      VITE_FIREBASE_AUTH_DOMAIN: '${env.VITE_FIREBASE_AUTH_DOMAIN || 'slotify-8eae9.firebaseapp.com'}',
+      VITE_FIREBASE_PROJECT_ID: '${env.VITE_FIREBASE_PROJECT_ID || 'slotify-8eae9'}',
+      VITE_FIREBASE_STORAGE_BUCKET: '${env.VITE_FIREBASE_STORAGE_BUCKET || 'slotify-8eae9.firebasestorage.app'}',
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '${env.VITE_FIREBASE_MESSAGING_SENDER_ID || '805043462033'}',
+      VITE_FIREBASE_APP_ID: '${env.VITE_FIREBASE_APP_ID || '1:805043462033:web:60cb0062d1f38869fd0430'}',
+      VITE_FIREBASE_MEASUREMENT_ID: '${env.VITE_FIREBASE_MEASUREMENT_ID || 'G-ZKBKM35P1H'}',
       
       // Feature flags
       VITE_USE_FIREBASE_EMULATORS: '${env.VITE_USE_FIREBASE_EMULATORS || 'false'}',
