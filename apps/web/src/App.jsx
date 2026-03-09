@@ -22,7 +22,8 @@ import {
   Menu,
   Home,
   Settings,
-  User
+  User,
+  Plus
 } from 'lucide-react';
 import SettingsPage from './pages/SettingsPage';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
@@ -38,6 +39,10 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [backendStatus, setBackendStatus] = useState('checking');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [createEventForm, setCreateEventForm] = useState({ title: '', date: '', startTime: '', endTime: '', description: '', attendees: '' });
+  const [createEventError, setCreateEventError] = useState(null);
 
   // API configuration
   const API_BASE_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-api-backend.vercel.app';
@@ -50,6 +55,15 @@ function App() {
   useEffect(() => {
     wakeUpBackend();
   }, []);
+
+  // Auto-refresh calendar events every 60 seconds (real-time sync)
+  useEffect(() => {
+    if (!user) return;
+    const intervalId = setInterval(() => {
+      fetchCalendarEvents(user);
+    }, 60000);
+    return () => clearInterval(intervalId);
+  }, [user]);
 
   // Check for auth callback on page load
   useEffect(() => {
@@ -112,8 +126,7 @@ function App() {
 
     try {
       const provider = new GoogleAuthProvider();
-      provider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-      provider.addScope('https://www.googleapis.com/auth/calendar.events.readonly');
+      provider.addScope('https://www.googleapis.com/auth/calendar.events');
 
       const result = await signInWithPopup(auth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -310,6 +323,43 @@ function App() {
     setCurrentPage('home');
   };
 
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    if (!user?.accessToken) return;
+    setIsCreatingEvent(true);
+    setCreateEventError(null);
+    try {
+      const startDateTime = new Date(`${createEventForm.date}T${createEventForm.startTime}`).toISOString();
+      const endDateTime = new Date(`${createEventForm.date}T${createEventForm.endTime}`).toISOString();
+      const event = {
+        summary: createEventForm.title,
+        description: createEventForm.description,
+        start: { dateTime: startDateTime, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+        end: { dateTime: endDateTime, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      };
+      if (createEventForm.attendees.trim()) {
+        event.attendees = createEventForm.attendees.split(',').map(email => ({ email: email.trim() })).filter(a => a.email);
+      }
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${user.accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
+      if (response.ok) {
+        setShowCreateModal(false);
+        setCreateEventForm({ title: '', date: '', startTime: '', endTime: '', description: '', attendees: '' });
+        await fetchCalendarEvents(user);
+      } else {
+        const err = await response.json();
+        setCreateEventError(err.error?.message || 'Failed to create event. Token may have expired — try signing out and back in.');
+      }
+    } catch (error) {
+      setCreateEventError('Failed to create event: ' + error.message);
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  };
+
   // Helper to get user display name from various data structures
   const getUserName = (userData) => {
     if (!userData) return '';
@@ -380,6 +430,110 @@ function App() {
         <Icon className={`w-3.5 h-3.5 ${config.animate ? 'animate-spin' : ''}`} />
         {config.text}
       </span>
+    );
+  };
+
+  // Create Event Modal Component
+  const CreateEventModal = () => {
+    if (!showCreateModal) return null;
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">Create New Event</h2>
+            <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+          <form onSubmit={handleCreateEvent} className="p-6 space-y-4">
+            {createEventError && (
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {createEventError}
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Event Title *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Team Standup"
+                value={createEventForm.title}
+                onChange={e => setCreateEventForm(f => ({ ...f, title: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+              <input
+                type="date"
+                required
+                value={createEventForm.date}
+                onChange={e => setCreateEventForm(f => ({ ...f, date: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
+                <input
+                  type="time"
+                  required
+                  value={createEventForm.startTime}
+                  onChange={e => setCreateEventForm(f => ({ ...f, startTime: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
+                <input
+                  type="time"
+                  required
+                  value={createEventForm.endTime}
+                  onChange={e => setCreateEventForm(f => ({ ...f, endTime: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Attendees (comma-separated emails)</label>
+              <input
+                type="text"
+                placeholder="e.g. alice@example.com, bob@example.com"
+                value={createEventForm.attendees}
+                onChange={e => setCreateEventForm(f => ({ ...f, attendees: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                rows={3}
+                placeholder="Optional description"
+                value={createEventForm.description}
+                onChange={e => setCreateEventForm(f => ({ ...f, description: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isCreatingEvent}
+                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isCreatingEvent ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</> : 'Create Event'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     );
   };
 
@@ -802,13 +956,22 @@ function App() {
             <div className="flex items-center gap-3">
               <StatusBadge />
               {user ? (
-                <button
-                  onClick={() => fetchCalendarEvents(user)}
-                  disabled={isLoadingEvents}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <RefreshCw className={`w-5 h-5 text-gray-500 ${isLoadingEvents ? 'animate-spin' : ''}`} />
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Event
+                  </button>
+                  <button
+                    onClick={() => fetchCalendarEvents(user)}
+                    disabled={isLoadingEvents}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <RefreshCw className={`w-5 h-5 text-gray-500 ${isLoadingEvents ? 'animate-spin' : ''}`} />
+                  </button>
+                </>
               ) : (
                 <button
                   onClick={handleGoogleLogin}
@@ -968,7 +1131,7 @@ function App() {
                       return d >= now && d <= weekEnd;
                     }).length, icon: CalendarDays, color: 'bg-purple-500'
                   },
-                  { label: 'With Attendees', value: calendarEvents.filter(e => e.attendees?.length > 0).length, icon: Users, color: 'bg-orange-500' }
+                  { label: 'Completed', value: calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) < new Date()).length, icon: CheckCircle, color: 'bg-green-500' }
                 ].map((stat, i) => (
                   <div key={i} className="bg-white rounded-xl p-6 border border-gray-100">
                     <div className="flex items-center justify-between">
@@ -1086,8 +1249,10 @@ function App() {
       </main >
 
       {/* Event Modal */}
-      < EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-    </div >
+      <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+      {/* Create Event Modal */}
+      <CreateEventModal />
+    </div>
   );
 
   // Loading State
