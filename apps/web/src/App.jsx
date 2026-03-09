@@ -43,6 +43,7 @@ function App() {
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [createEventForm, setCreateEventForm] = useState({ title: '', date: '', startTime: '', endTime: '', description: '', attendees: '' });
   const [createEventError, setCreateEventError] = useState(null);
+  const [eventsError, setEventsError] = useState(null);
 
   // API configuration
   const API_BASE_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-api-backend.vercel.app';
@@ -85,7 +86,14 @@ function App() {
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
+        // Check if Google access token is expired
+        if (userData.tokenExpiresAt && Date.now() > userData.tokenExpiresAt) {
+          localStorage.removeItem('slotify_user');
+          setAuthError('Your session has expired. Please sign in again to view your calendar.');
+          return;
+        }
         setUser(userData);
+        setCurrentPage('dashboard');
         fetchCalendarEvents(userData);
       } catch (error) {
         localStorage.removeItem('slotify_user');
@@ -137,6 +145,7 @@ function App() {
         name: result.user.displayName,
         picture: result.user.photoURL,
         accessToken: credential.accessToken,
+        tokenExpiresAt: Date.now() + 3500 * 1000, // Google tokens expire in 1hr; store as ~58min
         calendarProvider: 'google'
       };
 
@@ -296,16 +305,29 @@ function App() {
       // If backend failed and we have a Google access token, call Google Calendar API directly
       if (!backendSuccess && provider === 'google' && userData.accessToken) {
         try {
-          const now = new Date().toISOString();
-          const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=50&timeMin=${now}&singleEvents=true&orderBy=startTime`;
+          // Fetch events from 30 days ago through 90 days from now for a complete view
+          const pastDate = new Date();
+          pastDate.setDate(pastDate.getDate() - 30);
+          const futureDate = new Date();
+          futureDate.setDate(futureDate.getDate() + 90);
+          const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=250&timeMin=${pastDate.toISOString()}&timeMax=${futureDate.toISOString()}&singleEvents=true&orderBy=startTime`;
           const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${userData.accessToken}` }
           });
           if (response.ok) {
             const data = await response.json();
             setCalendarEvents(data.items || []);
+            setEventsError(null);
+          } else if (response.status === 401) {
+            // Token expired or revoked
+            setEventsError('session_expired');
+            localStorage.removeItem('slotify_user');
+          } else {
+            setEventsError('api_error');
+            console.error('Google Calendar API error:', response.status);
           }
         } catch (e) {
+          setEventsError('network_error');
           console.error('Direct Google Calendar API failed:', e);
         }
       }
@@ -887,6 +909,7 @@ function App() {
             {[
               { icon: Home, label: 'Dashboard', page: 'dashboard' },
               { icon: Calendar, label: 'Calendar', page: 'calendar' },
+              { icon: Users, label: 'Booking', page: 'booking' },
               { icon: User, label: 'Account', page: 'account' },
               { icon: Settings, label: 'Settings', page: 'settings' }
             ].map((item) => (
@@ -1045,6 +1068,163 @@ function App() {
             <div className="max-w-7xl mx-auto">
               <SettingsPage user={user} />
             </div>
+          ) : currentPage === 'calendar' ? (
+            /* Calendar Page — all events list */
+            <div className="max-w-4xl mx-auto space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">All Events</h2>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Event
+                </button>
+              </div>
+              {eventsError === 'session_expired' ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                  <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+                  <p className="font-medium text-amber-800">Session expired</p>
+                  <p className="text-sm text-amber-700 mt-1 mb-4">Please sign out and sign in again to refresh your calendar access.</p>
+                  <button onClick={handleLogout} className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700">Sign Out & Reconnect</button>
+                </div>
+              ) : isLoadingEvents ? (
+                <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto" />
+                  <p className="text-gray-500 mt-4">Loading events...</p>
+                </div>
+              ) : calendarEvents.length === 0 ? (
+                <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 font-medium">No events found</p>
+                  <p className="text-gray-400 text-sm mt-1">Create your first event to get started</p>
+                </div>
+              ) : (
+                (() => {
+                  const now = new Date();
+                  const upcoming = calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) >= now);
+                  const past = calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) < now).reverse();
+                  const renderEvent = (event, i) => {
+                    const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
+                    const isPast = new Date(event.end?.dateTime || event.end?.date) < now;
+                    return (
+                      <div key={i} onClick={() => setSelectedEvent(event)} className={`bg-white rounded-xl border p-4 cursor-pointer hover:shadow-md transition-shadow flex items-center gap-4 ${isPast ? 'border-gray-100 opacity-70' : 'border-gray-200'}`}>
+                        <div className="w-14 text-center flex-shrink-0">
+                          <p className="text-xs text-gray-500 uppercase">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                          <p className="text-2xl font-bold text-gray-900">{start.getDate()}</p>
+                          <p className="text-xs text-gray-400">{start.toLocaleDateString('en-US', { month: 'short' })}</p>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-medium truncate ${isPast ? 'text-gray-500' : 'text-gray-900'}`}>{event.summary || 'Untitled'}</p>
+                          <p className="text-sm text-gray-500">{formatEventTime(event)}</p>
+                          {event.attendees?.length > 0 && <p className="text-xs text-indigo-500 mt-1">{event.attendees.length} attendees</p>}
+                        </div>
+                        {isPast && <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs font-medium flex-shrink-0">Past</span>}
+                        <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      </div>
+                    );
+                  };
+                  return (
+                    <div className="space-y-4">
+                      {upcoming.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Upcoming ({upcoming.length})</p>
+                          <div className="space-y-2">{upcoming.map(renderEvent)}</div>
+                        </div>
+                      )}
+                      {past.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Past ({past.length})</p>
+                          <div className="space-y-2">{past.map(renderEvent)}</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+          ) : currentPage === 'booking' ? (
+            /* Booking Page */
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Booking Page</h2>
+                <p className="text-gray-500 text-sm mt-1">Share your availability and let others book time with you</p>
+              </div>
+              {/* Shareable Link */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h3 className="font-semibold text-gray-900 mb-1">Your Booking Link</h3>
+                <p className="text-sm text-gray-500 mb-4">Share this link so others can see when you're available</p>
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={`${window.location.origin}?book=${encodeURIComponent(getUserEmail(user))}`}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
+                  />
+                  <button
+                    onClick={() => navigator.clipboard.writeText(`${window.location.origin}?book=${encodeURIComponent(getUserEmail(user))}`)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+              {/* Upcoming Availability */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">Your Upcoming Schedule</h3>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Event
+                  </button>
+                </div>
+                {eventsError === 'session_expired' ? (
+                  <div className="text-center py-8">
+                    <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-2" />
+                    <p className="text-amber-700 font-medium">Session expired — please sign in again</p>
+                    <button onClick={handleLogout} className="mt-3 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm">Reconnect</button>
+                  </div>
+                ) : isLoadingEvents ? (
+                  <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin text-indigo-600 mx-auto" /></div>
+                ) : (
+                  <div className="space-y-2">
+                    {calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) >= new Date()).slice(0, 10).map((event, i) => {
+                      const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
+                      return (
+                        <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                          <div className="w-12 text-center">
+                            <p className="text-xs text-gray-500">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                            <p className="text-lg font-bold text-gray-900">{start.getDate()}</p>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900 text-sm">{event.summary || 'Busy'}</p>
+                            <p className="text-xs text-gray-500">{formatEventTime(event)}</p>
+                          </div>
+                          <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">Scheduled</span>
+                        </div>
+                      );
+                    })}
+                    {calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) >= new Date()).length === 0 && (
+                      <p className="text-center text-gray-500 py-6 text-sm">No upcoming events — your calendar is free!</p>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Quick Book for yourself */}
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl p-6 text-white">
+                <h3 className="font-semibold mb-1">Create a New Meeting</h3>
+                <p className="text-indigo-200 text-sm mb-4">Instantly add a new event to your Google Calendar</p>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Book a Meeting
+                </button>
+              </div>
+            </div>
           ) : currentPage === 'account' ? (
             /* Account Page */
             <div className="max-w-2xl mx-auto">
@@ -1199,10 +1379,25 @@ function App() {
                     <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto" />
                     <p className="text-gray-500 mt-4">Loading events...</p>
                   </div>
+                ) : eventsError === 'session_expired' ? (
+                  <div className="p-12 text-center">
+                    <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+                    <p className="text-gray-800 font-medium">Session expired</p>
+                    <p className="text-gray-500 text-sm mt-1 mb-4">Your Google access token has expired. Please sign out and sign back in.</p>
+                    <button onClick={handleLogout} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                      Sign Out &amp; Reconnect
+                    </button>
+                  </div>
+                ) : eventsError ? (
+                  <div className="p-12 text-center">
+                    <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Failed to load events. Check your connection and try refreshing.</p>
+                  </div>
                 ) : getUpcomingEvents().length === 0 ? (
                   <div className="p-12 text-center">
                     <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">No upcoming events</p>
+                    <p className="text-gray-400 text-sm mt-1">Create one with the <strong>New Event</strong> button above</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
@@ -1271,7 +1466,7 @@ function App() {
   }
 
   // Render appropriate page
-  return currentPage === 'dashboard' || currentPage === 'calendar' || currentPage === 'settings' || currentPage === 'account' ? (
+  return currentPage === 'dashboard' || currentPage === 'calendar' || currentPage === 'settings' || currentPage === 'account' || currentPage === 'booking' ? (
     <Dashboard />
   ) : (
     <LandingPage />
