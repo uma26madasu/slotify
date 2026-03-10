@@ -904,17 +904,17 @@ function App() {
 
   // Dashboard Component
   const Dashboard = () => (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#080d1a]">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col">
+      <aside className="fixed left-0 top-0 bottom-0 w-64 bg-[#0d1424] border-r border-slate-800 hidden lg:flex flex-col">
         <div className="p-6">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
               <CalendarDays className="w-6 h-6 text-white" />
             </div>
             <div>
-              <span className="text-xl font-bold text-gray-900">Slotify</span>
-              <p className="text-xs text-indigo-500 font-medium">via ChainSync</p>
+              <span className="text-xl font-bold text-white">Slotify</span>
+              <p className="text-xs text-cyan-400 font-medium">via ChainSync</p>
             </div>
           </div>
         </div>
@@ -931,9 +931,9 @@ function App() {
               <button
                 key={item.page}
                 onClick={() => setCurrentPage(item.page)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${currentPage === item.page
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-gray-600 hover:bg-gray-50'
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${currentPage === item.page
+                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -944,23 +944,23 @@ function App() {
         </nav>
 
         {user && (
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+          <div className="p-4 border-t border-slate-800">
+            <div className="flex items-center gap-3 p-3 bg-slate-800 rounded-xl">
               {getUserPicture(user) ? (
-                <img src={getUserPicture(user)} alt="" className="w-10 h-10 rounded-full" />
+                <img src={getUserPicture(user)} alt="" className="w-10 h-10 rounded-full ring-2 ring-cyan-500/30" />
               ) : (
-                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 bg-cyan-500/20 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-cyan-400" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{getUserName(user)}</p>
-                <p className="text-xs text-gray-500 truncate">{getUserEmail(user)}</p>
+                <p className="text-sm font-medium text-white truncate">{getUserName(user)}</p>
+                <p className="text-xs text-slate-500 truncate">{getUserEmail(user)}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
@@ -972,20 +972,20 @@ function App() {
       {/* Main Content */}
       <main className="lg:ml-64">
         {/* Top Bar */}
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        <header className="sticky top-0 z-40 bg-[#080d1a]/90 backdrop-blur-sm border-b border-slate-800">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+                className="lg:hidden p-2 hover:bg-slate-800 rounded-lg"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 text-slate-400" />
               </button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">
+                <h1 className="text-xl font-semibold text-white">
                   {user ? `Welcome back, ${getUserName(user).split(' ')[0]}` : 'Welcome to Slotify'}
                 </h1>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
               </div>
@@ -997,7 +997,7 @@ function App() {
                 <>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-cyan-500 text-slate-950 rounded-lg text-sm font-bold hover:bg-cyan-400 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     New Event
@@ -1005,16 +1005,16 @@ function App() {
                   <button
                     onClick={() => fetchCalendarEvents(user)}
                     disabled={isLoadingEvents}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
                   >
-                    <RefreshCw className={`w-5 h-5 text-gray-500 ${isLoadingEvents ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`w-5 h-5 text-slate-400 ${isLoadingEvents ? 'animate-spin' : ''}`} />
                   </button>
                 </>
               ) : (
                 <button
                   onClick={handleGoogleLogin}
                   disabled={isLoadingAuth}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg font-bold hover:bg-cyan-400 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   {isLoadingAuth ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1038,22 +1038,20 @@ function App() {
           {!user ? (
             /* Not Logged In State */
             <div className="max-w-2xl mx-auto text-center py-16">
-              <div className="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Calendar className="w-10 h-10 text-indigo-600" />
+              <div className="w-20 h-20 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Calendar className="w-10 h-10 text-cyan-400" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Connect Your Calendar</h2>
-              <p className="text-gray-600 mb-8">
+              <h2 className="text-2xl font-bold text-white mb-4">Connect Your Calendar</h2>
+              <p className="text-slate-400 mb-8">
                 Sign in with Google or Microsoft to sync your calendar and start scheduling smarter.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button
                   onClick={handleGoogleLogin}
                   disabled={isLoadingAuth}
-                  className="inline-flex items-center gap-3 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-3 px-6 py-3 bg-cyan-500 text-slate-950 rounded-xl font-bold hover:bg-cyan-400 transition-colors disabled:opacity-50"
                 >
-                  {isLoadingAuth ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
+                  {isLoadingAuth ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                       <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -1066,11 +1064,9 @@ function App() {
                 <button
                   onClick={handleMicrosoftLogin}
                   disabled={isLoadingAuth}
-                  className="inline-flex items-center gap-3 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-3 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-500 transition-colors disabled:opacity-50"
                 >
-                  {isLoadingAuth ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
+                  {isLoadingAuth ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path fill="currentColor" d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zm12.6 0H12.6V0H24v11.4z" />
                     </svg>
@@ -1084,35 +1080,35 @@ function App() {
               <SettingsPage user={user} />
             </div>
           ) : currentPage === 'calendar' ? (
-            /* Calendar Page — all events list */
+            /* Calendar Page */
             <div className="max-w-4xl mx-auto space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">All Events</h2>
+                <h2 className="text-xl font-semibold text-white">All Events</h2>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg text-sm font-bold hover:bg-cyan-400 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   New Event
                 </button>
               </div>
               {eventsError === 'session_expired' ? (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
-                  <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
-                  <p className="font-medium text-amber-800">Session expired</p>
-                  <p className="text-sm text-amber-700 mt-1 mb-4">Please sign out and sign in again to refresh your calendar access.</p>
-                  <button onClick={handleLogout} className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700">Sign Out & Reconnect</button>
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 text-center">
+                  <AlertCircle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+                  <p className="font-medium text-amber-300">Session expired</p>
+                  <p className="text-sm text-amber-400/70 mt-1 mb-4">Please sign out and sign in again to refresh your calendar access.</p>
+                  <button onClick={handleLogout} className="px-4 py-2 bg-amber-500 text-slate-950 rounded-lg text-sm font-bold hover:bg-amber-400">Sign Out & Reconnect</button>
                 </div>
               ) : isLoadingEvents ? (
-                <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto" />
-                  <p className="text-gray-500 mt-4">Loading events...</p>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-cyan-400 mx-auto" />
+                  <p className="text-slate-400 mt-4">Loading events...</p>
                 </div>
               ) : calendarEvents.length === 0 ? (
-                <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-                  <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium">No events found</p>
-                  <p className="text-gray-400 text-sm mt-1">Create your first event to get started</p>
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
+                  <Calendar className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                  <p className="text-slate-400 font-medium">No events found</p>
+                  <p className="text-slate-600 text-sm mt-1">Create your first event to get started</p>
                 </div>
               ) : (
                 (() => {
@@ -1123,19 +1119,20 @@ function App() {
                     const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
                     const isPast = new Date(event.end?.dateTime || event.end?.date) < now;
                     return (
-                      <div key={i} onClick={() => setSelectedEvent(event)} className={`bg-white rounded-xl border p-4 cursor-pointer hover:shadow-md transition-shadow flex items-center gap-4 ${isPast ? 'border-gray-100 opacity-70' : 'border-gray-200'}`}>
+                      <div key={i} onClick={() => setSelectedEvent(event)} className={`bg-slate-900 border rounded-xl p-4 cursor-pointer hover:bg-slate-800 transition-colors flex items-center gap-4 ${isPast ? 'border-slate-800 opacity-60' : 'border-slate-700 hover:border-slate-600'}`}>
                         <div className="w-14 text-center flex-shrink-0">
-                          <p className="text-xs text-gray-500 uppercase">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
-                          <p className="text-2xl font-bold text-gray-900">{start.getDate()}</p>
-                          <p className="text-xs text-gray-400">{start.toLocaleDateString('en-US', { month: 'short' })}</p>
+                          <p className="text-xs text-slate-500 uppercase">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                          <p className="text-2xl font-bold text-white">{start.getDate()}</p>
+                          <p className="text-xs text-slate-500">{start.toLocaleDateString('en-US', { month: 'short' })}</p>
                         </div>
+                        <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ background: isPast ? '#334155' : 'linear-gradient(to bottom, #06b6d4, #0ea5e9)' }} />
                         <div className="flex-1 min-w-0">
-                          <p className={`font-medium truncate ${isPast ? 'text-gray-500' : 'text-gray-900'}`}>{event.summary || 'Untitled'}</p>
-                          <p className="text-sm text-gray-500">{formatEventTime(event)}</p>
-                          {event.attendees?.length > 0 && <p className="text-xs text-indigo-500 mt-1">{event.attendees.length} attendees</p>}
+                          <p className={`font-medium truncate ${isPast ? 'text-slate-500' : 'text-white'}`}>{event.summary || 'Untitled'}</p>
+                          <p className="text-sm text-slate-500">{formatEventTime(event)}</p>
+                          {event.attendees?.length > 0 && <p className="text-xs text-cyan-400 mt-1">{event.attendees.length} attendees</p>}
                         </div>
-                        {isPast && <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs font-medium flex-shrink-0">Past</span>}
-                        <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        {isPast && <span className="px-2 py-1 bg-slate-800 text-slate-500 rounded text-xs font-medium flex-shrink-0 border border-slate-700">Past</span>}
+                        <ChevronRight className="w-5 h-5 text-slate-600 flex-shrink-0" />
                       </div>
                     );
                   };
@@ -1143,13 +1140,13 @@ function App() {
                     <div className="space-y-4">
                       {upcoming.length > 0 && (
                         <div>
-                          <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Upcoming ({upcoming.length})</p>
+                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Upcoming ({upcoming.length})</p>
                           <div className="space-y-2">{upcoming.map(renderEvent)}</div>
                         </div>
                       )}
                       {past.length > 0 && (
                         <div>
-                          <p className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">Past ({past.length})</p>
+                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Past ({past.length})</p>
                           <div className="space-y-2">{past.map(renderEvent)}</div>
                         </div>
                       )}
@@ -1159,93 +1156,149 @@ function App() {
               )}
             </div>
           ) : currentPage === 'booking' ? (
-            /* Booking Page */
+            /* Booking Page — interactive calendar + time slots */
             <div className="max-w-3xl mx-auto space-y-6">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Booking Page</h2>
-                <p className="text-gray-500 text-sm mt-1">Share your availability and let others book time with you</p>
+                <h2 className="text-xl font-semibold text-white">Your Booking Page</h2>
+                <p className="text-slate-400 text-sm mt-1">Share your availability and let others book time with you</p>
               </div>
-              {/* Shareable Link */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="font-semibold text-gray-900 mb-1">Your Booking Link</h3>
-                <p className="text-sm text-gray-500 mb-4">Share this link so others can see when you're available</p>
+              {/* Booking Link */}
+              <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
+                <h3 className="font-semibold text-white mb-1">Your Booking Link</h3>
+                <p className="text-sm text-slate-400 mb-4">Share this link so others can see when you're available</p>
                 <div className="flex gap-2">
                   <input
                     readOnly
                     value={`${window.location.origin}?book=${encodeURIComponent(getUserEmail(user))}`}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
+                    className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-300 font-mono"
                   />
                   <button
                     onClick={() => navigator.clipboard.writeText(`${window.location.origin}?book=${encodeURIComponent(getUserEmail(user))}`)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    className="px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg text-sm font-bold hover:bg-cyan-400 transition-colors"
                   >
                     Copy
                   </button>
                 </div>
               </div>
-              {/* Upcoming Availability */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Your Upcoming Schedule</h3>
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    New Event
-                  </button>
-                </div>
-                {eventsError === 'session_expired' ? (
-                  <div className="text-center py-8">
-                    <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-2" />
-                    <p className="text-amber-700 font-medium">Session expired — please sign in again</p>
-                    <button onClick={handleLogout} className="mt-3 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm">Reconnect</button>
+              {/* Interactive Booking Calendar */}
+              <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+                {/* Profile Header */}
+                <div className="p-5 border-b border-slate-800 flex items-center gap-4">
+                  {getUserPicture(user) ? (
+                    <img src={getUserPicture(user)} alt="" className="w-12 h-12 rounded-full ring-2 ring-cyan-500/30" />
+                  ) : (
+                    <div className="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center text-cyan-400 font-bold text-xl">
+                      {getUserName(user)[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-white">{getUserName(user)}</p>
+                    <p className="text-sm text-slate-400">30 min · Google Meet</p>
                   </div>
-                ) : isLoadingEvents ? (
-                  <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin text-indigo-600 mx-auto" /></div>
-                ) : (
-                  <div className="space-y-2">
-                    {calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) >= new Date()).slice(0, 10).map((event, i) => {
-                      const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
-                      return (
-                        <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-12 text-center">
-                            <p className="text-xs text-gray-500">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
-                            <p className="text-lg font-bold text-gray-900">{start.getDate()}</p>
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 text-sm">{event.summary || 'Busy'}</p>
-                            <p className="text-xs text-gray-500">{formatEventTime(event)}</p>
-                          </div>
-                          <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">Scheduled</span>
+                </div>
+                <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-800">
+                  {/* Month Calendar */}
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <button
+                        onClick={() => setBookingViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
+                        className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4 text-slate-400" />
+                      </button>
+                      <span className="text-sm font-semibold text-white uppercase tracking-wide">
+                        {bookingViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </span>
+                      <button
+                        onClick={() => setBookingViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
+                        className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-7 text-xs text-slate-600 text-center mb-2 font-medium">
+                      {['MON','TUE','WED','THU','FRI','SAT','SUN'].map(d => <div key={d}>{d}</div>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-0.5">
+                      {getCalendarDays(bookingViewDate.getFullYear(), bookingViewDate.getMonth()).map((day, i) => {
+                        if (!day) return <div key={i} />;
+                        const today = new Date(); today.setHours(0,0,0,0);
+                        const isPast = day < today;
+                        const isSelected = bookingSelectedDate?.toDateString() === day.toDateString();
+                        const isToday = day.toDateString() === today.toDateString();
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => { if (!isPast) { setBookingSelectedDate(day); setBookingSelectedSlot(null); } }}
+                            className={`aspect-square rounded-full text-sm font-medium transition-all flex items-center justify-center
+                              ${isPast ? 'text-slate-700 cursor-not-allowed' : ''}
+                              ${isSelected ? 'bg-cyan-500 text-slate-950 font-bold' : ''}
+                              ${isToday && !isSelected ? 'ring-2 ring-cyan-500/50 text-cyan-400' : ''}
+                              ${!isPast && !isSelected ? 'text-slate-300 hover:bg-slate-800 hover:text-white' : ''}
+                            `}
+                          >
+                            {day.getDate()}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {/* Time Slots */}
+                  <div className="p-5">
+                    {bookingSelectedDate ? (
+                      <>
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">
+                          Available Times · {bookingSelectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                          {getAvailableSlotsForDate(bookingSelectedDate).map(slot => (
+                            <button
+                              key={slot}
+                              onClick={() => setBookingSelectedSlot(slot)}
+                              className={`px-3 py-2.5 rounded-xl text-sm font-medium border transition-all
+                                ${bookingSelectedSlot === slot
+                                  ? 'bg-teal-500 border-teal-400 text-white shadow-lg shadow-teal-500/25'
+                                  : 'border-slate-700 text-slate-300 hover:border-cyan-400 hover:text-cyan-400 bg-slate-800/50'}`}
+                            >
+                              {formatSlotTime(slot)}
+                              {bookingSelectedSlot === slot && ' ✓'}
+                            </button>
+                          ))}
+                          {getAvailableSlotsForDate(bookingSelectedDate).length === 0 && (
+                            <p className="col-span-2 text-slate-600 text-sm py-6 text-center">No slots available — fully booked</p>
+                          )}
                         </div>
-                      );
-                    })}
-                    {calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) >= new Date()).length === 0 && (
-                      <p className="text-center text-gray-500 py-6 text-sm">No upcoming events — your calendar is free!</p>
+                        {bookingSelectedSlot && (
+                          <button
+                            onClick={() => {
+                              const [h, m] = bookingSelectedSlot.split(':').map(Number);
+                              const endH = m >= 30 ? h + 1 : h;
+                              const endM = (m + 30) % 60;
+                              const date = bookingSelectedDate.toISOString().split('T')[0];
+                              setCreateEventForm(f => ({ ...f, date, startTime: bookingSelectedSlot, endTime: `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}` }));
+                              setShowCreateModal(true);
+                            }}
+                            className="mt-4 w-full py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 rounded-xl font-bold text-sm hover:from-cyan-400 hover:to-teal-400 transition-all shadow-lg shadow-cyan-500/20"
+                          >
+                            Confirm — {bookingSelectedDate.toLocaleDateString('en-US', { weekday: 'short' })} {formatSlotTime(bookingSelectedSlot)}
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+                        <CalendarDays className="w-10 h-10 text-slate-700 mb-3" />
+                        <p className="text-slate-500 text-sm">Select a date to<br />see available times</p>
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-              {/* Quick Book for yourself */}
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl p-6 text-white">
-                <h3 className="font-semibold mb-1">Create a New Meeting</h3>
-                <p className="text-indigo-200 text-sm mb-4">Instantly add a new event to your Google Calendar</p>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Book a Meeting
-                </button>
+                </div>
               </div>
             </div>
           ) : currentPage === 'account' ? (
             /* Account Page */
             <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                {/* Account Header */}
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-8">
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                <div className="bg-gradient-to-r from-cyan-600 to-blue-700 px-6 py-8">
                   <div className="flex items-center gap-4">
                     {getUserPicture(user) ? (
                       <img src={getUserPicture(user)} alt="" className="w-20 h-20 rounded-full border-4 border-white/20" />
@@ -1256,45 +1309,40 @@ function App() {
                     )}
                     <div>
                       <h2 className="text-2xl font-bold text-white">{getUserName(user)}</h2>
-                      <p className="text-indigo-100">{getUserEmail(user)}</p>
+                      <p className="text-blue-100">{getUserEmail(user)}</p>
                     </div>
                   </div>
                 </div>
-
-                {/* Account Details */}
                 <div className="p-6 space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">Account Information</h3>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                        <span className="text-gray-600">Full Name</span>
-                        <span className="font-medium text-gray-900">{getUserName(user)}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                        <span className="text-gray-600">Email</span>
-                        <span className="font-medium text-gray-900">{getUserEmail(user)}</span>
-                      </div>
-                      <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                        <span className="text-gray-600">Connected Account</span>
-                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${user.calendarProvider === 'microsoft'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-green-100 text-green-700'
-                          }`}>
+                      {[
+                        { label: 'Full Name', value: getUserName(user) },
+                        { label: 'Email', value: getUserEmail(user) },
+                      ].map(item => (
+                        <div key={item.label} className="flex items-center justify-between py-3 border-b border-slate-800">
+                          <span className="text-slate-400">{item.label}</span>
+                          <span className="font-medium text-white">{item.value}</span>
+                        </div>
+                      ))}
+                      <div className="flex items-center justify-between py-3 border-b border-slate-800">
+                        <span className="text-slate-400">Connected Account</span>
+                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${user.calendarProvider === 'microsoft' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' : 'bg-green-500/10 text-green-400 border-green-500/30'}`}>
                           <CheckCircle className="w-4 h-4" />
                           {user.calendarProvider === 'microsoft' ? 'Microsoft 365' : 'Google Calendar'}
                         </span>
                       </div>
                       <div className="flex items-center justify-between py-3">
-                        <span className="text-gray-600">Total Events Synced</span>
-                        <span className="font-medium text-gray-900">{calendarEvents.length}</span>
+                        <span className="text-slate-400">Total Events Synced</span>
+                        <span className="font-medium text-white">{calendarEvents.length}</span>
                       </div>
                     </div>
                   </div>
-
-                  <div className="pt-4 border-t border-gray-100">
+                  <div className="pt-4 border-t border-slate-800">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500/10 text-red-400 rounded-xl font-medium hover:bg-red-500/20 transition-colors border border-red-500/20"
                     >
                       <LogOut className="w-5 h-5" />
                       Sign Out
@@ -1304,37 +1352,34 @@ function App() {
               </div>
             </div>
           ) : (
-            /* Logged In State */
+            /* Dashboard Home */
             <div className="space-y-6">
               {/* Stats Grid */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Total Events', value: calendarEvents.length, icon: Calendar, color: 'bg-blue-500' },
+                  { label: 'Total Events', value: calendarEvents.length, icon: Calendar, color: 'from-blue-500 to-cyan-500', glow: 'shadow-blue-500/20' },
                   {
                     label: 'Today', value: calendarEvents.filter(e => {
                       const d = new Date(e.start?.dateTime || e.start?.date);
-                      const today = new Date();
-                      return d.toDateString() === today.toDateString();
-                    }).length, icon: Clock, color: 'bg-emerald-500'
+                      return d.toDateString() === new Date().toDateString();
+                    }).length, icon: Clock, color: 'from-emerald-500 to-teal-500', glow: 'shadow-emerald-500/20'
                   },
                   {
                     label: 'This Week', value: calendarEvents.filter(e => {
                       const d = new Date(e.start?.dateTime || e.start?.date);
-                      const now = new Date();
-                      const weekEnd = new Date(now);
-                      weekEnd.setDate(now.getDate() + 7);
+                      const now = new Date(); const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7);
                       return d >= now && d <= weekEnd;
-                    }).length, icon: CalendarDays, color: 'bg-purple-500'
+                    }).length, icon: CalendarDays, color: 'from-purple-500 to-violet-500', glow: 'shadow-purple-500/20'
                   },
-                  { label: 'Completed', value: calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) < new Date()).length, icon: CheckCircle, color: 'bg-green-500' }
+                  { label: 'Completed', value: calendarEvents.filter(e => new Date(e.end?.dateTime || e.end?.date) < new Date()).length, icon: CheckCircle, color: 'from-green-500 to-emerald-500', glow: 'shadow-green-500/20' }
                 ].map((stat, i) => (
-                  <div key={i} className="bg-white rounded-xl p-6 border border-gray-100">
+                  <div key={i} className={`bg-slate-900 rounded-xl p-6 border border-slate-800 hover:border-slate-700 transition-colors shadow-lg ${stat.glow}`}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500">{stat.label}</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                        <p className="text-sm text-slate-400">{stat.label}</p>
+                        <p className="text-3xl font-bold text-white mt-1">{stat.value}</p>
                       </div>
-                      <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
+                      <div className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
                         <stat.icon className="w-6 h-6 text-white" />
                       </div>
                     </div>
@@ -1342,46 +1387,49 @@ function App() {
                 ))}
               </div>
 
-              {/* ChainSync Orchestration Panel */}
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl p-6 text-white">
-                <div className="flex items-center justify-between">
+              {/* Connected Sources Panel */}
+              <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+                <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-yellow-300" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                      <Zap className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-white">ChainSync Orchestration</h3>
-                      <p className="text-indigo-200 text-sm">Slotify is your scheduling layer</p>
+                      <p className="text-slate-500 text-sm">Slotify is your unified scheduling hub</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-400/20 border border-green-400/30 rounded-full">
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-green-300 text-xs font-medium">Active</span>
+                    <span className="text-green-400 text-xs font-medium">All synced</span>
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { label: 'Alert Meetings', icon: AlertCircle, desc: 'Auto-scheduled from alerts' },
-                    { label: 'Authorities', icon: Users, desc: 'Response coordinators' },
-                    { label: 'Integrations', icon: Globe, desc: 'Google · Slack · Zoom' }
-                  ].map((item, i) => (
-                    <div key={i} className="bg-white/10 rounded-lg p-3">
-                      <item.icon className="w-5 h-5 text-indigo-200 mb-1" />
-                      <p className="text-white text-sm font-medium">{item.label}</p>
-                      <p className="text-indigo-300 text-xs">{item.desc}</p>
+                    { label: 'Google', letter: 'G', color: 'from-red-500 to-orange-500', desc: `${calendarEvents.length} events` },
+                    { label: 'Outlook', letter: 'O', color: 'from-blue-500 to-blue-600', desc: 'Connect to sync' },
+                    { label: 'Zoom', letter: 'Z', color: 'from-blue-400 to-cyan-500', desc: 'Link generation' },
+                    { label: 'Slack', letter: 'S', color: 'from-purple-500 to-violet-600', desc: 'Status updates' },
+                  ].map((src, i) => (
+                    <div key={i} className="bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-slate-600 transition-colors">
+                      <div className={`w-9 h-9 bg-gradient-to-br ${src.color} rounded-xl flex items-center justify-center text-white text-sm font-bold mb-3`}>
+                        {src.letter}
+                      </div>
+                      <p className="text-white text-sm font-medium">{src.label}</p>
+                      <p className="text-slate-500 text-xs mt-0.5">{src.desc}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Upcoming Events */}
-              <div className="bg-white rounded-xl border border-gray-100">
-                <div className="p-6 border-b border-gray-100">
+              <div className="bg-slate-900 rounded-xl border border-slate-800">
+                <div className="p-6 border-b border-slate-800">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-900">Upcoming Events</h2>
+                    <h2 className="text-lg font-semibold text-white">Upcoming Events</h2>
                     <button
                       onClick={() => setCurrentPage('calendar')}
-                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+                      className="text-sm text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1"
                     >
                       View All
                       <ChevronRight className="w-4 h-4" />
@@ -1391,61 +1439,63 @@ function App() {
 
                 {isLoadingEvents ? (
                   <div className="p-12 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto" />
-                    <p className="text-gray-500 mt-4">Loading events...</p>
+                    <Loader2 className="w-8 h-8 animate-spin text-cyan-400 mx-auto" />
+                    <p className="text-slate-400 mt-4">Syncing events...</p>
                   </div>
                 ) : eventsError === 'session_expired' ? (
                   <div className="p-12 text-center">
                     <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-                    <p className="text-gray-800 font-medium">Session expired</p>
-                    <p className="text-gray-500 text-sm mt-1 mb-4">Your Google access token has expired. Please sign out and sign back in.</p>
-                    <button onClick={handleLogout} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
-                      Sign Out &amp; Reconnect
+                    <p className="text-white font-medium">Session expired</p>
+                    <p className="text-slate-400 text-sm mt-1 mb-4">Your Google access token has expired. Please sign out and sign back in.</p>
+                    <button onClick={handleLogout} className="px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg text-sm font-bold hover:bg-cyan-400">
+                      Sign Out & Reconnect
                     </button>
                   </div>
                 ) : eventsError ? (
                   <div className="p-12 text-center">
-                    <AlertCircle className="w-12 h-12 text-red-300 mx-auto mb-4" />
-                    <p className="text-gray-500">Failed to load events. Check your connection and try refreshing.</p>
+                    <AlertCircle className="w-12 h-12 text-red-400/50 mx-auto mb-4" />
+                    <p className="text-slate-400">Failed to load events. Try refreshing.</p>
                   </div>
                 ) : getUpcomingEvents().length === 0 ? (
                   <div className="p-12 text-center">
-                    <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No upcoming events</p>
-                    <p className="text-gray-400 text-sm mt-1">Create one with the <strong>New Event</strong> button above</p>
+                    <Calendar className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                    <p className="text-slate-400">No upcoming events</p>
+                    <p className="text-slate-600 text-sm mt-1">Create one with the <span className="text-cyan-400">New Event</span> button</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-slate-800">
                     {getUpcomingEvents().map((event, i) => {
                       const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
-
                       return (
                         <div
                           key={i}
                           onClick={() => setSelectedEvent(event)}
-                          className="p-4 hover:bg-gray-50 cursor-pointer transition-colors flex items-center gap-4"
+                          className="p-4 hover:bg-slate-800/50 cursor-pointer transition-colors flex items-center gap-4"
                         >
-                          <div className="w-14 text-center">
-                            <p className="text-xs text-gray-500 uppercase">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
-                            <p className="text-2xl font-bold text-gray-900">{start.getDate()}</p>
+                          <div className="w-14 text-center flex-shrink-0">
+                            <p className="text-xs text-slate-500 uppercase">{start.toLocaleDateString('en-US', { weekday: 'short' })}</p>
+                            <p className="text-2xl font-bold text-white">{start.getDate()}</p>
                           </div>
+                          <div className="w-1 h-10 rounded-full flex-shrink-0 bg-gradient-to-b from-cyan-500 to-blue-500" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 truncate">{event.summary || 'Untitled'}</p>
-                            <p className="text-sm text-gray-500">{formatEventTime(event)}</p>
+                            <p className="font-medium text-white truncate">{event.summary || 'Untitled'}</p>
+                            <p className="text-sm text-slate-500">{formatEventTime(event)}</p>
                           </div>
                           {event.attendees?.length > 0 && (
                             <div className="flex -space-x-2">
                               {event.attendees.slice(0, 3).map((_, j) => (
-                                <div key={j} className="w-8 h-8 bg-gray-200 rounded-full border-2 border-white" />
+                                <div key={j} className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full border-2 border-[#0d1424] flex items-center justify-center text-xs text-white font-bold">
+                                  {String.fromCharCode(65 + j)}
+                                </div>
                               ))}
                               {event.attendees.length > 3 && (
-                                <div className="w-8 h-8 bg-gray-100 rounded-full border-2 border-white flex items-center justify-center text-xs text-gray-500">
+                                <div className="w-8 h-8 bg-slate-700 rounded-full border-2 border-[#0d1424] flex items-center justify-center text-xs text-slate-400">
                                   +{event.attendees.length - 3}
                                 </div>
                               )}
                             </div>
                           )}
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                          <ChevronRight className="w-5 h-5 text-slate-600" />
                         </div>
                       );
                     })}
@@ -1453,10 +1503,9 @@ function App() {
                 )}
               </div>
             </div>
-          )
-          }
-        </div >
-      </main >
+          )}
+        </div>
+      </main>
 
       {/* Event Modal */}
       <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
