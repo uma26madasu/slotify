@@ -4,6 +4,7 @@ import {
   Clock,
   Users,
   ChevronRight,
+  ChevronLeft,
   LogOut,
   RefreshCw,
   CheckCircle,
@@ -44,6 +45,9 @@ function App() {
   const [createEventForm, setCreateEventForm] = useState({ title: '', date: '', startTime: '', endTime: '', description: '', attendees: '' });
   const [createEventError, setCreateEventError] = useState(null);
   const [eventsError, setEventsError] = useState(null);
+  const [bookingSelectedDate, setBookingSelectedDate] = useState(null);
+  const [bookingSelectedSlot, setBookingSelectedSlot] = useState(null);
+  const [bookingViewDate, setBookingViewDate] = useState(new Date());
 
   // API configuration
   const API_BASE_URL = import.meta.env.VITE_API_URL || window.__ENV__?.VITE_API_URL || 'https://slotify-api-backend.vercel.app';
@@ -420,13 +424,44 @@ function App() {
       .slice(0, 5);
   };
 
+  const formatSlotTime = (slot) => {
+    const [h, m] = slot.split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    return `${displayH}:${String(m).padStart(2, '0')} ${period}`;
+  };
+
+  const getCalendarDays = (year, month) => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDow = (firstDay.getDay() + 6) % 7;
+    const days = [];
+    for (let i = 0; i < startDow; i++) days.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
+    return days;
+  };
+
+  const getAvailableSlotsForDate = (date) => {
+    const allSlots = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+    return allSlots.filter(slot => {
+      const [h, m] = slot.split(':').map(Number);
+      const slotStart = new Date(date); slotStart.setHours(h, m, 0, 0);
+      const slotEnd = new Date(slotStart); slotEnd.setMinutes(slotEnd.getMinutes() + 30);
+      return !calendarEvents.some(ev => {
+        const es = new Date(ev.start?.dateTime || ev.start?.date);
+        const ee = new Date(ev.end?.dateTime || ev.end?.date);
+        return slotStart < ee && slotEnd > es;
+      });
+    });
+  };
+
   // Status Badge Component
   const StatusBadge = () => {
     const statusConfig = {
-      checking: { color: 'bg-yellow-100 text-yellow-800', icon: Loader2, text: 'Connecting...', animate: true },
-      waking: { color: 'bg-blue-100 text-blue-800', icon: Loader2, text: 'Starting...', animate: true },
-      online: { color: 'bg-green-100 text-green-800', icon: CheckCircle, text: 'Online', animate: false },
-      error: { color: 'bg-red-100 text-red-800', icon: AlertCircle, text: 'Backend Offline', animate: false }
+      checking: { color: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30', icon: Loader2, text: 'Connecting...', animate: true },
+      waking: { color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30', icon: Loader2, text: 'Starting...', animate: true },
+      online: { color: 'bg-green-500/20 text-green-400 border border-green-500/30', icon: CheckCircle, text: 'Online', animate: false },
+      error: { color: 'bg-red-500/20 text-red-400 border border-red-500/30', icon: AlertCircle, text: 'Backend Offline', animate: false }
     };
 
     const config = statusConfig[backendStatus];
@@ -459,96 +494,96 @@ function App() {
   const CreateEventModal = () => {
     if (!showCreateModal) return null;
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Create New Event</h2>
-            <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <X className="w-5 h-5 text-gray-500" />
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-white">Create New Event</h2>
+            <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
+              <X className="w-5 h-5 text-slate-400" />
             </button>
           </div>
           <form onSubmit={handleCreateEvent} className="p-6 space-y-4">
             {createEventError && (
-              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
+              <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {createEventError}
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Event Title *</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Event Title *</label>
               <input
                 type="text"
                 required
                 placeholder="e.g. Team Standup"
                 value={createEventForm.title}
                 onChange={e => setCreateEventForm(f => ({ ...f, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Date *</label>
               <input
                 type="date"
                 required
                 value={createEventForm.date}
                 onChange={e => setCreateEventForm(f => ({ ...f, date: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Start Time *</label>
                 <input
                   type="time"
                   required
                   value={createEventForm.startTime}
                   onChange={e => setCreateEventForm(f => ({ ...f, startTime: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">End Time *</label>
                 <input
                   type="time"
                   required
                   value={createEventForm.endTime}
                   onChange={e => setCreateEventForm(f => ({ ...f, endTime: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Attendees (comma-separated emails)</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Attendees (comma-separated emails)</label>
               <input
                 type="text"
                 placeholder="e.g. alice@example.com, bob@example.com"
                 value={createEventForm.attendees}
                 onChange={e => setCreateEventForm(f => ({ ...f, attendees: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
               <textarea
                 rows={3}
                 placeholder="Optional description"
                 value={createEventForm.description}
                 onChange={e => setCreateEventForm(f => ({ ...f, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
               />
             </div>
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 border border-slate-700 text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isCreatingEvent}
-                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg text-sm font-bold hover:bg-cyan-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isCreatingEvent ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</> : 'Create Event'}
               </button>
@@ -562,90 +597,70 @@ function App() {
   // Event Modal Component
   const EventModal = ({ event, onClose }) => {
     if (!event) return null;
-
     const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
-
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto animate-slideInUp" onClick={e => e.stopPropagation()}>
-          <div className="p-6 border-b border-gray-100">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+          <div className="p-6 border-b border-slate-800">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900">{event.summary || 'Untitled Event'}</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="text-xl font-semibold text-white">{event.summary || 'Untitled Event'}</h2>
+                <p className="text-sm text-slate-400 mt-1">
                   {start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
+              <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
+                <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
           </div>
-
           <div className="p-6 space-y-4">
-            <div className="flex items-center gap-3 text-gray-700">
-              <Clock className="w-5 h-5 text-indigo-500" />
+            <div className="flex items-center gap-3 text-slate-300">
+              <Clock className="w-5 h-5 text-cyan-400" />
               <span>{formatEventTime(event)}</span>
             </div>
-
             {event.location && (
-              <div className="flex items-center gap-3 text-gray-700">
-                <MapPin className="w-5 h-5 text-indigo-500" />
+              <div className="flex items-center gap-3 text-slate-300">
+                <MapPin className="w-5 h-5 text-cyan-400" />
                 <span>{event.location}</span>
               </div>
             )}
-
             {event.attendees && event.attendees.length > 0 && (
               <div className="flex items-start gap-3">
-                <Users className="w-5 h-5 text-indigo-500 mt-0.5" />
+                <Users className="w-5 h-5 text-cyan-400 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm text-gray-500 mb-2">{event.attendees.length} attendees</p>
+                  <p className="text-sm text-slate-400 mb-2">{event.attendees.length} attendees</p>
                   <div className="flex flex-wrap gap-2">
                     {event.attendees.slice(0, 5).map((attendee, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
-                        <span className={`w-2 h-2 rounded-full ${attendee.responseStatus === 'accepted' ? 'bg-green-500' :
-                          attendee.responseStatus === 'declined' ? 'bg-red-500' : 'bg-yellow-500'
-                          }`} />
+                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800 border border-slate-700 rounded-full text-xs text-slate-300">
+                        <span className={`w-2 h-2 rounded-full ${attendee.responseStatus === 'accepted' ? 'bg-green-400' : attendee.responseStatus === 'declined' ? 'bg-red-400' : 'bg-yellow-400'}`} />
                         {attendee.displayName || attendee.email?.split('@')[0]}
                       </span>
                     ))}
-                    {event.attendees.length > 5 && (
-                      <span className="text-xs text-gray-500">+{event.attendees.length - 5} more</span>
-                    )}
+                    {event.attendees.length > 5 && <span className="text-xs text-slate-500">+{event.attendees.length - 5} more</span>}
                   </div>
                 </div>
               </div>
             )}
-
             {event.description && (
-              <div className="pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{event.description}</p>
+              <div className="pt-4 border-t border-slate-800">
+                <p className="text-sm text-slate-400 whitespace-pre-wrap">{event.description}</p>
               </div>
             )}
-
             {event.conferenceData?.entryPoints && (
               <div className="pt-4">
-                <a
-                  href={event.conferenceData.entryPoints[0]?.uri}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
+                <a href={event.conferenceData.entryPoints[0]?.uri} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors">
                   <Video className="w-4 h-4" />
                   Join Meeting
                 </a>
               </div>
             )}
           </div>
-
           {event.htmlLink && (
-            <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
-              <a
-                href={event.htmlLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
-              >
+            <div className="px-6 py-4 bg-slate-800/50 rounded-b-2xl border-t border-slate-800">
+              <a href={event.htmlLink} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300">
                 <ExternalLink className="w-4 h-4" />
                 View in Google Calendar
               </a>
