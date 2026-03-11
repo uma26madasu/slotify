@@ -351,10 +351,14 @@ function App() {
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
-    if (!user?.accessToken) return;
     setIsCreatingEvent(true);
     setCreateEventError(null);
     try {
+      const userEmail = getUserEmail(user);
+      if (!userEmail) {
+        setCreateEventError('No user email found. Please sign in again.');
+        return;
+      }
       const startDateTime = new Date(`${createEventForm.date}T${createEventForm.startTime}`).toISOString();
       const endDateTime = new Date(`${createEventForm.date}T${createEventForm.endTime}`).toISOString();
       const event = {
@@ -366,18 +370,23 @@ function App() {
       if (createEventForm.attendees.trim()) {
         event.attendees = createEventForm.attendees.split(',').map(email => ({ email: email.trim() })).filter(a => a.email);
       }
-      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      // Route through backend to avoid Firebase OAuth project limitations
+      const response = await fetch(`${API_BASE_URL}/api/calendar/events`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${user.accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(event),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, event }),
       });
-      if (response.ok) {
+      const data = await response.json();
+      if (response.ok && data.success) {
         setShowCreateModal(false);
         setCreateEventForm({ title: '', date: '', startTime: '', endTime: '', description: '', attendees: '' });
         await fetchCalendarEvents(user);
+      } else if (data.needsConnection || response.status === 404 || response.status === 401) {
+        setCreateEventError('Google Calendar not connected. Go to Settings → Connect Google Calendar, then try again.');
+      } else if (response.status === 403) {
+        setCreateEventError('Calendar write permission needed. Go to Settings → Reconnect Google Calendar to grant access.');
       } else {
-        const err = await response.json();
-        setCreateEventError(err.error?.message || 'Failed to create event. Token may have expired — try signing out and back in.');
+        setCreateEventError(data.message || 'Failed to create event. Please try again.');
       }
     } catch (error) {
       setCreateEventError('Failed to create event: ' + error.message);
@@ -1435,9 +1444,22 @@ function App() {
             </div>
             <form onSubmit={handleCreateEvent} className="p-6 space-y-4">
               {createEventError && (
-                <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {createEventError}
+                <div className="px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p>{createEventError}</p>
+                      {(createEventError.includes('Settings') || createEventError.includes('connect')) && (
+                        <button
+                          type="button"
+                          onClick={() => { setShowCreateModal(false); setCurrentPage('settings'); }}
+                          className="mt-2 underline text-cyan-400 hover:text-cyan-300 text-xs"
+                        >
+                          Go to Settings → Calendars
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
               <div>

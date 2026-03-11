@@ -294,13 +294,101 @@ const checkConflicts = async (req, res) => {
   }
 };
 
+// Create a calendar event
+const createCalendarEvent = async (req, res) => {
+  try {
+    console.log('🔄 Creating calendar event...');
+
+    const { email, event } = req.body;
+
+    if (!email || !event) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and event data are required'
+      });
+    }
+
+    if (!event.summary) {
+      return res.status(400).json({
+        success: false,
+        message: 'Event title (summary) is required'
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Calendar not connected. Please connect your Google Calendar in Settings first.',
+        needsConnection: true
+      });
+    }
+
+    if (!user.accessToken) {
+      return res.status(401).json({
+        success: false,
+        message: 'Calendar not connected. Please connect your Google Calendar in Settings first.',
+        needsConnection: true
+      });
+    }
+
+    const oauth2Client = await createAuthenticatedClient(user);
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    console.log('🔄 Inserting event into Google Calendar...');
+
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+      sendNotifications: true
+    });
+
+    console.log(`✅ Event created: ${response.data.id}`);
+
+    res.json({
+      success: true,
+      message: 'Event created successfully',
+      event: {
+        id: response.data.id,
+        summary: response.data.summary,
+        start: response.data.start,
+        end: response.data.end,
+        htmlLink: response.data.htmlLink,
+        status: response.data.status
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error creating calendar event:', error);
+
+    let errorMessage = 'Failed to create event';
+    let statusCode = 500;
+
+    if (error.message?.includes('invalid_grant')) {
+      errorMessage = 'Calendar access expired. Please reconnect your Google Calendar in Settings.';
+      statusCode = 401;
+    } else if (error.message?.includes('insufficient permissions') || error.code === 403) {
+      errorMessage = 'Insufficient calendar permissions. Please reconnect your Google Calendar in Settings to grant write access.';
+      statusCode = 403;
+    }
+
+    res.status(statusCode).json({
+      success: false,
+      message: errorMessage,
+      error: error.message
+    });
+  }
+};
+
 console.log('✅ googleCalendarController functions defined');
 
 // Export all functions
 module.exports = {
   getCalendarEvents,
   getCalendars,
-  checkConflicts
+  checkConflicts,
+  createCalendarEvent
 };
 
 console.log('✅ googleCalendarController exported successfully');
