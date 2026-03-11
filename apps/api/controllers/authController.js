@@ -22,6 +22,7 @@ const FRONTEND_REDIRECT_URI = process.env.FRONTEND_URL
   ? `${process.env.FRONTEND_URL}/auth/google/callback`
   : process.env.GOOGLE_REDIRECT_URI || 'https://slotify-web-production.up.railway.app/auth/google/callback';
 const SCOPES = [
+  'https://www.googleapis.com/auth/calendar.events',
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/userinfo.profile',
   'https://www.googleapis.com/auth/userinfo.email'
