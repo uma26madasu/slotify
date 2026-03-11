@@ -491,82 +491,6 @@ function App() {
   };
 
   // Event Modal Component
-  const EventModal = ({ event, onClose }) => {
-    if (!event) return null;
-    const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date(event.start?.date);
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
-          <div className="p-6 border-b border-slate-800">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h2 className="text-xl font-semibold text-white">{event.summary || 'Untitled Event'}</h2>
-                <p className="text-sm text-slate-400 mt-1">
-                  {start.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                </p>
-              </div>
-              <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
-            </div>
-          </div>
-          <div className="p-6 space-y-4">
-            <div className="flex items-center gap-3 text-slate-300">
-              <Clock className="w-5 h-5 text-cyan-400" />
-              <span>{formatEventTime(event)}</span>
-            </div>
-            {event.location && (
-              <div className="flex items-center gap-3 text-slate-300">
-                <MapPin className="w-5 h-5 text-cyan-400" />
-                <span>{event.location}</span>
-              </div>
-            )}
-            {event.attendees && event.attendees.length > 0 && (
-              <div className="flex items-start gap-3">
-                <Users className="w-5 h-5 text-cyan-400 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm text-slate-400 mb-2">{event.attendees.length} attendees</p>
-                  <div className="flex flex-wrap gap-2">
-                    {event.attendees.slice(0, 5).map((attendee, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800 border border-slate-700 rounded-full text-xs text-slate-300">
-                        <span className={`w-2 h-2 rounded-full ${attendee.responseStatus === 'accepted' ? 'bg-green-400' : attendee.responseStatus === 'declined' ? 'bg-red-400' : 'bg-yellow-400'}`} />
-                        {attendee.displayName || attendee.email?.split('@')[0]}
-                      </span>
-                    ))}
-                    {event.attendees.length > 5 && <span className="text-xs text-slate-500">+{event.attendees.length - 5} more</span>}
-                  </div>
-                </div>
-              </div>
-            )}
-            {event.description && (
-              <div className="pt-4 border-t border-slate-800">
-                <p className="text-sm text-slate-400 whitespace-pre-wrap">{event.description}</p>
-              </div>
-            )}
-            {event.conferenceData?.entryPoints && (
-              <div className="pt-4">
-                <a href={event.conferenceData.entryPoints[0]?.uri} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors">
-                  <Video className="w-4 h-4" />
-                  Join Meeting
-                </a>
-              </div>
-            )}
-          </div>
-          {event.htmlLink && (
-            <div className="px-6 py-4 bg-slate-800/50 rounded-b-2xl border-t border-slate-800">
-              <a href={event.htmlLink} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300">
-                <ExternalLink className="w-4 h-4" />
-                View in Google Calendar
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   // Landing Page Component
   const LandingPage = () => (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900">
@@ -1403,8 +1327,102 @@ function App() {
         </div>
       </main>
 
-      {/* Event Modal */}
-      <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+    </div>
+  );
+
+  // Loading State
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <CalendarDays className="w-8 h-8 text-white" />
+          </div>
+          <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white text-lg">Connecting to Google...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Modals rendered outside Dashboard to prevent remount on state change
+  const modals = (
+    <>
+      {/* Event Detail Modal */}
+      {selectedEvent && (() => {
+        const evStart = selectedEvent.start?.dateTime ? new Date(selectedEvent.start.dateTime) : new Date(selectedEvent.start?.date);
+        return (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setSelectedEvent(null)}>
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-slate-800">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h2 className="text-xl font-semibold text-white">{selectedEvent.summary || 'Untitled Event'}</h2>
+                    <p className="text-sm text-slate-400 mt-1">
+                      {evStart.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </p>
+                  </div>
+                  <button onClick={() => setSelectedEvent(null)} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
+                    <X className="w-5 h-5 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-3 text-slate-300">
+                  <Clock className="w-5 h-5 text-cyan-400" />
+                  <span>{formatEventTime(selectedEvent)}</span>
+                </div>
+                {selectedEvent.location && (
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <MapPin className="w-5 h-5 text-cyan-400" />
+                    <span>{selectedEvent.location}</span>
+                  </div>
+                )}
+                {selectedEvent.attendees && selectedEvent.attendees.length > 0 && (
+                  <div className="flex items-start gap-3">
+                    <Users className="w-5 h-5 text-cyan-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-400 mb-2">{selectedEvent.attendees.length} attendees</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedEvent.attendees.slice(0, 5).map((attendee, i) => (
+                          <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800 border border-slate-700 rounded-full text-xs text-slate-300">
+                            <span className={`w-2 h-2 rounded-full ${attendee.responseStatus === 'accepted' ? 'bg-green-400' : attendee.responseStatus === 'declined' ? 'bg-red-400' : 'bg-yellow-400'}`} />
+                            {attendee.displayName || attendee.email?.split('@')[0]}
+                          </span>
+                        ))}
+                        {selectedEvent.attendees.length > 5 && <span className="text-xs text-slate-500">+{selectedEvent.attendees.length - 5} more</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {selectedEvent.description && (
+                  <div className="pt-4 border-t border-slate-800">
+                    <p className="text-sm text-slate-400 whitespace-pre-wrap">{selectedEvent.description}</p>
+                  </div>
+                )}
+                {selectedEvent.conferenceData?.entryPoints && (
+                  <div className="pt-4">
+                    <a href={selectedEvent.conferenceData.entryPoints[0]?.uri} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-slate-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors">
+                      <Video className="w-4 h-4" />
+                      Join Meeting
+                    </a>
+                  </div>
+                )}
+              </div>
+              {selectedEvent.htmlLink && (
+                <div className="px-6 py-4 bg-slate-800/50 rounded-b-2xl border-t border-slate-800">
+                  <a href={selectedEvent.htmlLink} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300">
+                    <ExternalLink className="w-4 h-4" />
+                    View in Google Calendar
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
       {/* Create Event Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowCreateModal(false)}>
@@ -1427,6 +1445,7 @@ function App() {
                 <input
                   type="text"
                   required
+                  autoFocus
                   placeholder="e.g. Team Standup"
                   value={createEventForm.title}
                   onChange={e => setCreateEventForm(f => ({ ...f, title: e.target.value }))}
@@ -1505,27 +1524,12 @@ function App() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
-
-  // Loading State
-  if (isLoadingAuth) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <CalendarDays className="w-8 h-8 text-white" />
-          </div>
-          <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
-          <p className="text-white text-lg">Connecting to Google...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Render appropriate page
   return currentPage === 'dashboard' || currentPage === 'calendar' || currentPage === 'settings' || currentPage === 'account' || currentPage === 'booking' ? (
-    <Dashboard />
+    <>{<Dashboard />}{modals}</>
   ) : (
     <LandingPage />
   );
